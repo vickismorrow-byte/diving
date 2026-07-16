@@ -1,0 +1,27 @@
+name: Keep Supabase Awake
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every Sunday, Tuesday, and Thursday
+    - cron: '0 0 * * 0,2,4'
+  workflow_dispatch: # Allows you to run it manually to test it
+
+jobs:
+  ping_db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send External API Request to Supabase
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/" \
+          -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+          -H "Content-Profile: public")
+          
+          echo "Supabase API responded with HTTP Status Code: $RESPONSE"
+          
+          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 204 ]; then
+            echo "Success: Database activity registered."
+          else
+            echo "Error: Unexpected response code $RESPONSE"
+            exit 1
+          fi
