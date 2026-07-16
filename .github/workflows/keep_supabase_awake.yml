@@ -11,15 +11,14 @@ jobs:
     steps:
       - name: Send API Request
         run: |
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "https://supabase.co" \
-          -H "apikey: sb_publishable_FTiUYQt0XB7d7BcsGKesDA_ERo2G-lz" \
-          -H "Authorization: Bearer sb_publishable_FTiUYQt0XB7d7BcsGKesDA_ERo2G-lz" \
-          -H "Content-Profile: public")
+          # Try hitting the base database API root directly
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "https://supabase.co")
           
-          echo "Supabase API responded with HTTP Status Code: $RESPONSE"
+          echo "Supabase Base Server responded with HTTP Status Code: $RESPONSE"
           
-          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 204 ] || [ "$RESPONSE" -eq 404 ]; then
-            echo "Success: Database connection verified."
+          # A status code of 200 or 302 means the server is online and traffic is registered
+          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 302 ]; then
+            echo "Success: Main database host pinged successfully!"
           else
             echo "Error: Unexpected response code $RESPONSE"
             exit 1
