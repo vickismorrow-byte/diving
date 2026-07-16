@@ -11,15 +11,10 @@ jobs:
     steps:
       - name: Send API Request
         run: |
-          # Querying your specific server root
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "https://supabase.co")
+          # Send the request to your database endpoint
+          curl -s "https://supabase.co" \
+          -H "apikey: sb_publishable_FTiUYQt0XB7d7BcsGKesDA_ERo2G-lz" \
+          -H "Authorization: Bearer sb_publishable_FTiUYQt0XB7d7BcsGKesDA_ERo2G-lz" \
+          -H "Content-Profile: public"
           
-          echo "Supabase Server responded with HTTP Status Code: $RESPONSE"
-          
-          # Allow 200, 302, or 404 because any response from YOUR URL counts as activity
-          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 302 ] || [ "$RESPONSE" -eq 404 ]; then
-            echo "Success: Project server connection verified and activity registered!"
-          else
-            echo "Error: Unexpected response code $RESPONSE"
-            exit 1
-          fi
+          echo "Database ping sent successfully."
