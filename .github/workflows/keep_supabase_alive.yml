@@ -16,4 +16,12 @@ jobs:
           -H "Authorization: Bearer sb_publishable_FTiUYQt0XB7d7BcsGKesDA_ERo2G-lz" \
           -H "Content-Profile: public")
           
-          echo "Status: $RESPONSE"
+          echo "Supabase API responded with HTTP Status Code: $RESPONSE"
+          
+          # 404 is allowed because an empty database will return a 404 Not Found
+          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 204 ] || [ "$RESPONSE" -eq 404 ]; then
+            echo "Success: Database connection verified and activity registered."
+          else
+            echo "Error: Unexpected response code $RESPONSE"
+            exit 1
+          fi
