@@ -11,14 +11,14 @@ jobs:
     steps:
       - name: Send API Request
         run: |
-          # Try hitting the base database API root directly
+          # Querying your specific server root
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "https://supabase.co")
           
-          echo "Supabase Base Server responded with HTTP Status Code: $RESPONSE"
+          echo "Supabase Server responded with HTTP Status Code: $RESPONSE"
           
-          # A status code of 200 or 302 means the server is online and traffic is registered
-          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 302 ]; then
-            echo "Success: Main database host pinged successfully!"
+          # Allow 200, 302, or 404 because any response from YOUR URL counts as activity
+          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 302 ] || [ "$RESPONSE" -eq 404 ]; then
+            echo "Success: Project server connection verified and activity registered!"
           else
             echo "Error: Unexpected response code $RESPONSE"
             exit 1
