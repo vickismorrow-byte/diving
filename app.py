@@ -3,6 +3,17 @@ import pandas as pd
 from datetime import date
 from supabase import create_client
 
+
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+
 # =====================================================
 # PAGE CONFIG
 # =====================================================
