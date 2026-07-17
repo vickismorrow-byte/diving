@@ -596,73 +596,73 @@ elif page == "Top Scores":
 
     if score_type == "Top Scores":
 
-    result_frames = []
+        result_frames = []
 
-    six_df = df[df["6-Dive Score"].notna()].copy()
+        six_df = df[df["6-Dive Score"].notna()].copy()
 
-    if not six_df.empty:
+        if not six_df.empty:
 
-        idx = (
-            six_df.groupby("diver")["6-Dive Score"]
-            .idxmax()
+            idx = (
+                six_df.groupby("diver")["6-Dive Score"]
+                .idxmax()
+            )
+
+            best_6 = six_df.loc[idx].copy()
+
+            best_6["Format"] = "6-Dive"
+
+            best_6["Score"] = best_6["6-Dive Score"]
+
+            result_frames.append(
+                best_6[["diver", "meet", "Format", "Score"]]
+            )
+
+        eleven_df = df[df["11-Dive Score"].notna()].copy()
+
+        if not eleven_df.empty:
+
+            idx = (
+                eleven_df.groupby("diver")["11-Dive Score"]
+                .idxmax()
+            )
+
+            best_11 = eleven_df.loc[idx].copy()
+
+            best_11["Format"] = "11-Dive"
+
+            best_11["Score"] = best_11["11-Dive Score"]
+
+            result_frames.append(
+                best_11[["diver", "meet", "Format", "Score"]]
+            )
+
+        if result_frames:
+
+            display = pd.concat(
+                result_frames,
+                ignore_index=True
+            )
+
+        else:
+
+            display = pd.DataFrame(
+                columns=[
+                    "diver",
+                    "meet",
+                    "Format",
+                    "Score"
+                ]
+            )
+
+        display = display.rename(
+            columns={
+                "diver": "Diver",
+                "meet": "Meet"
+            }
         )
 
-        best_6 = six_df.loc[idx].copy()
+        rank_col = "Score"
 
-        best_6["Format"] = "6-Dive"
-
-        best_6["Score"] = best_6["6-Dive Score"]
-
-        result_frames.append(
-            best_6[["diver", "meet", "Format", "Score"]]
-        )
-
-    eleven_df = df[df["11-Dive Score"].notna()].copy()
-
-    if not eleven_df.empty:
-
-        idx = (
-            eleven_df.groupby("diver")["11-Dive Score"]
-            .idxmax()
-        )
-
-        best_11 = eleven_df.loc[idx].copy()
-
-        best_11["Format"] = "11-Dive"
-
-        best_11["Score"] = best_11["11-Dive Score"]
-
-        result_frames.append(
-            best_11[["diver", "meet", "Format", "Score"]]
-        )
-
-    if result_frames:
-
-        display = pd.concat(
-            result_frames,
-            ignore_index=True
-        )
-
-    else:
-
-        display = pd.DataFrame(
-            columns=[
-                "diver",
-                "meet",
-                "Format",
-                "Score"
-            ]
-        )
-
-    display = display.rename(
-        columns={
-            "diver": "Diver",
-            "meet": "Meet"
-        }
-    )
-
-    rank_col = "Score"
-    
     if format_filter == "6-Dive":
 
         display = (
