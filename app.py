@@ -76,12 +76,13 @@ def build_dd_lookup():
 # SIDEBAR
 # =====================================================
 
-page = st.sidebar.radio(
+page = st.sidebar.button(
     "Navigation",
     [
         "Add Diver",
         "Add Meet",
-        "Add Results"
+        "Add Results",
+        "Top Scores"
     ]
 )
 
@@ -394,3 +395,166 @@ elif page == "Add Results":
 
     except Exception as e:
         st.error(f"Unable to load results page: {e}")
+
+# =====================================================
+# TOP SCORES
+# =====================================================
+
+
+
+elif page == "Top Scores":
+
+    @st.cache_data(ttl=60)
+    def get_results_summary():
+        response = (
+            supabase.table("results")
+            .select("meet, diver, score")
+            .execute()
+        )
+
+        df = pd.DataFrame(response.data)
+
+        if df.empty:
+            return df
+
+        summary = (
+            df.groupby(["meet", "diver"], as_index=False)
+            .agg(
+                total_score=("score", "sum"),
+                dives=("score", "size")
+            )
+        )
+
+        summary["format"] = summary["dives"].map(
+            lambda x: "6-Dive" if x == 6 else (
+                "11-Dive" if x == 11 else None
+            )
+        )
+
+        score_6 = (
+            summary[summary["format"] == "6-Dive"]
+            [["meet", "diver", "total_score"]]
+            .rename(columns={"total_score": "score_6"})
+        )
+
+        score_11 = (
+            summary[summary["format"] == "11-Dive"]
+            [["meet", "diver", "total_score"]]
+            .rename(columns={"total_score": "score_11"})
+        )
+
+        result = (
+            score_6.merge(
+                score_11,
+                on=["meet", "diver"],
+                how="outer"
+            )
+        )
+
+        return result
+
+    scores = get_results_summary()
+
+    if scores.empty:
+        st.info("No results found.")
+        st.stop()
+
+    scores["year"] = scores["meet"].str[:4]
+    scores["season"] = scores["meet"].str[5].map(
+        {"B": "Boys", "G": "Girls"}
+    )
+
+    # Mandatory Filters
+    year = st.selectbox(
+        "Year",
+        sorted(scores["year"].dropna().unique(), reverse=True)
+    )
+
+    season = st.selectbox(
+        "Season",
+        ["Boys", "Girls"]
+    )
+
+    score_type = st.selectbox(
+        "Type",
+        ["Top Scores", "All Scores"]
+    )
+
+    # Optional Filters
+    meet = st.selectbox(
+        "Meet",
+        ["All"] + sorted(scores["meet"].dropna().unique().tolist())
+    )
+
+    divers = sorted(scores["diver"].dropna().unique())
+    diver = st.selectbox(
+        "Diver",
+        ["All"] + divers
+    )
+
+    format_filter = st.selectbox(
+        "Format",
+        [None, "6-Dive", "11-Dive"]
+    )
+
+    df = scores.copy()
+
+    df = df[
+        (df["year"] == year) &
+        (df["season"] == season)
+    ]
+
+    if meet != "All":
+        df = df[df["meet"] == meet]
+
+    if diver != "All":
+        df = df[df["diver"] == diver]
+
+    if format_filter == "6-Dive":
+        df = df[df["score_6"].notna()]
+
+    elif format_filter == "11-Dive":
+        df = df[df["score_11"].notna()]
+
+    if score_type == "Top Scores":
+
+        if format_filter == "6-Dive":
+            idx = df.groupby("diver")["score_6"].idxmax()
+
+        elif format_filter == "11-Dive":
+            idx = df.groupby("diver")["score_11"].idxmax()
+
+        else:
+            df["best_score"] = df[
+                ["score_6", "score_11"]
+            ].max(axis=1)
+
+            idx = df.groupby("diver")["best_score"].idxmax()
+
+        df = df.loc[idx]
+
+    if format_filter is None:
+        display = df[
+            ["diver", "meet", "score_6", "score_11"]
+        ].sort_values(
+            ["diver", "meet"]
+        )
+
+    else:
+        score_col = "score_6" if format_filter == "6-Dive" else "score_11"
+
+        display = (
+            df[
+                ["diver", "meet", score_col]
+            ]
+            .rename(columns={score_col: "score"})
+            .sort_values(
+                ["diver", "meet"]
+            )
+        )
+
+    st.dataframe(
+        display,
+        use_container_width=True,
+        hide_index=True
+    )
