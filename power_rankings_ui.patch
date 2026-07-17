@@ -1,0 +1,113 @@
+@@
+     rankings["Power Ranking"] = (
+         rankings["Power Points"]
+         .rank(
+             method="min",
+             ascending=False
+         )
+         .astype(int)
+     )
+ 
+-    display_cols = [
+-        "Power Ranking",
+-        "Diver",
+-        *point_cols,
+-        "Power Points"
+-    ]
+-
+-    st.subheader("Display")
+-
+-    st.dataframe(
+-        rankings[display_cols],
+-        use_container_width=True
+-    )
++    rankings["Designation"] = ""
++
++    rankings.loc[
++        rankings["Power Ranking"].isin([1, 2]),
++        "Designation"
++    ] = "🏅 Tentative Sectional Diver"
++
++    rankings.loc[
++        rankings["Power Ranking"] == 3,
++        "Designation"
++    ] = "🥉 Tentative Sectional Alternate"
++
++    display_cols = [
++        "Power Ranking",
++        "Diver",
++        "Designation",
++        "Power Points"
++    ]
++
++    st.subheader("🏆 Power Rankings")
++
++    st.success(
++        """
++🏅 Tentative Sectional Qualification
++
++• Rank #1 – Tentative Sectional Diver
++• Rank #2 – Tentative Sectional Diver
++• Rank #3 – Tentative Sectional Alternate
++"""
++    )
++
++    def highlight_rank(row):
++        if row["Power Ranking"] == 1:
++            return [
++                "background-color:#FFD700;font-weight:bold"
++            ] * len(row)
++        elif row["Power Ranking"] == 2:
++            return [
++                "background-color:#C0C0C0;font-weight:bold"
++            ] * len(row)
++        elif row["Power Ranking"] == 3:
++            return [
++                "background-color:#CD7F32;color:white;font-weight:bold"
++            ] * len(row)
++        return [""] * len(row)
++
++    st.dataframe(
++        rankings[display_cols]
++        .style
++        .apply(highlight_rank, axis=1),
++        use_container_width=True,
++        hide_index=True
++    )
++
++    st.markdown("---")
++    st.subheader("Diver Breakdown")
++
++    for _, row in rankings.iterrows():
++
++        badge = ""
++
++        if row["Power Ranking"] in [1, 2]:
++            badge = "🏅 Tentative Sectional Diver"
++        elif row["Power Ranking"] == 3:
++            badge = "🥉 Tentative Sectional Alternate"
++
++        with st.expander(
++            f"#{row['Power Ranking']} • "
++            f"{row['Diver']} • "
++            f"{row['Power Points']} pts "
++            f"{badge}"
++        ):
++
++            metrics_df = pd.DataFrame({
++                "Metric": METRICS,
++                "Score": [
++                    row[m]
++                    for m in METRICS
++                ],
++                "Ranking Points": [
++                    row[f"{m} Pts"]
++                    for m in METRICS
++                ]
++            })
++
++            st.dataframe(
++                metrics_df,
++                use_container_width=True,
++                hide_index=True
++            )

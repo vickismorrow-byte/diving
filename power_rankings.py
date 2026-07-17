@@ -170,18 +170,22 @@ def best_category_pair(category_df):
 
 
 def calculate_best_meet(df_diver):
-
     meet_scores = (
         df_diver
-        .groupby("meet")["score"]
-        .sum()
-        .reset_index()
+        .groupby("meet")
+        .agg(
+            score=("score", "sum"),
+            dives=("score", "count")
+        )
     )
 
-    if meet_scores.empty:
+    valid_meets = meet_scores[meet_scores["dives"] == 11]
+
+    if valid_meets.empty:
         return 0
 
-    return float(meet_scores["score"].max())
+    return float(valid_meets["score"].max())
+
 
 
 def build_diver_projection(df_diver):
@@ -261,7 +265,6 @@ def build_diver_projection(df_diver):
 
 
 def assign_points(rank_df, metric):
-
     scores = (
         rank_df[["Diver", metric]]
         .sort_values(metric, ascending=False)
@@ -269,31 +272,23 @@ def assign_points(rank_df, metric):
     )
 
     mapping = {}
-
     rank_position = 1
-    prev_score = None
-    prev_points = None
 
-    for idx, row in scores.iterrows():
-
+    for _, row in scores.iterrows():
         score = row[metric]
 
-        if prev_score is not None and score == prev_score:
-            points = prev_points
-        else:
-            points = max(0, 51 - rank_position)
+        if score <= 0:
+            mapping[row["Diver"]] = 0
+            continue
 
-        mapping[row["Diver"]] = points
-
-        prev_score = score
-        prev_points = points
+        mapping[row["Diver"]] = max(0, 51 - rank_position)
         rank_position += 1
 
     return mapping
 
 
 def render_power_rankings_page(supabase):
-
+    
     st.header("Power Rankings")
 
     df = build_results_dataframe(supabase)
@@ -366,25 +361,74 @@ def render_power_rankings_page(supabase):
         .astype(int)
     )
 
+    rankings["Designation"] = ""
+
+    rankings.loc[
+        rankings["Power Ranking"].isin([1, 2]),
+        "Designation"
+    ] = "🏅 Tentative Sectional Diver"
+
+    rankings.loc[
+        rankings["Power Ranking"] == 3,
+        "Designation"
+    ] = "🥉 Tentative Sectional Alternate"
+
     display_cols = [
+        "Power Ranking",
+        "Diver",
+        "Designation",
+        "Power Points"
+    ]
+
+
+    col1, col2 = st.columns([3,2])
+    
+    with col1:
+        st.subheader("🏆 Power Rankings")
+
+    with col2:
+        show_metrics = st.checkbox(
+            "Show Detailed Metrics"
+        )
+
+
+    summary = rankings[display_cols]
+
+    st.dataframe(
+        summary,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    st.markdown("---")
+
+    if show_metrics:
+
+        detailed_cols = [
+            "Power Ranking",
+            "Diver",
+            "Power Points",
+            *METRICS
+        ]
+
+        st.dataframe(
+            rankings[detailed_cols],
+            use_container_width=True,
+            hide_index=True
+        )
+
+    # -------------------------
+    # CSV MEDIUM
+    # -------------------------
+
+    export_cols = [
         "Power Ranking",
         "Diver",
         *point_cols,
         "Power Points"
     ]
 
-    st.subheader("Display")
-
-    st.dataframe(
-        rankings[display_cols],
-        use_container_width=True
-    )
-
-    # -------------------------
-    # CSV MEDIUM
-    # -------------------------
-
-    csv_medium = rankings[display_cols].to_csv(
+    csv_medium = rankings[export_cols].to_csv(
         index=False
     )
 
@@ -466,13 +510,13 @@ def render_power_rankings_page(supabase):
         )
     )
 
-    pdf_table = [display_cols]
+    pdf_table = [export_cols]
 
     for _, row in rankings.iterrows():
 
         pdf_table.append([
             row[col]
-            for col in display_cols
+            for col in export_cols
         ])
 
     tbl = Table(pdf_table)
