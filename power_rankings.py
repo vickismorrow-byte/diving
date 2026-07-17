@@ -261,7 +261,6 @@ def build_diver_projection(df_diver):
 
 
 def assign_points(rank_df, metric):
-
     scores = (
         rank_df[["Diver", metric]]
         .sort_values(metric, ascending=False)
@@ -270,12 +269,14 @@ def assign_points(rank_df, metric):
 
     mapping = {}
 
+    # Only rank divers who actually have a score
+    ranked_scores = scores[scores[metric] > 0].reset_index(drop=True)
+
     rank_position = 1
     prev_score = None
     prev_points = None
 
-    for idx, row in scores.iterrows():
-
+    for _, row in ranked_scores.iterrows():
         score = row[metric]
 
         if prev_score is not None and score == prev_score:
@@ -288,6 +289,10 @@ def assign_points(rank_df, metric):
         prev_score = score
         prev_points = points
         rank_position += 1
+
+    # Anyone with 0 (missing metric) gets 0 points
+    for _, row in scores[scores[metric] <= 0].iterrows():
+        mapping[row["Diver"]] = 0
 
     return mapping
 
