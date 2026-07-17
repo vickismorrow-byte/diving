@@ -170,18 +170,22 @@ def best_category_pair(category_df):
 
 
 def calculate_best_meet(df_diver):
-
     meet_scores = (
         df_diver
-        .groupby("meet")["score"]
-        .sum()
-        .reset_index()
+        .groupby("meet")
+        .agg(
+            score=("score", "sum"),
+            dives=("score", "count")
+        )
     )
 
-    if meet_scores.empty:
+    valid_meets = meet_scores[meet_scores["dives"] == 11]
+
+    if valid_meets.empty:
         return 0
 
-    return float(meet_scores["score"].max())
+    return float(valid_meets["score"].max())
+
 
 
 def build_diver_projection(df_diver):
