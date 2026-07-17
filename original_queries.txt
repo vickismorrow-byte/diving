@@ -1,0 +1,151 @@
+create table public.divers (
+  diver text GENERATED ALWAYS as (
+    (
+      (initcap(last_name) || ', '::text) || initcap(first_name)
+    )
+  ) STORED not null,
+  last_name text not null,
+  first_name text not null,
+  season text not null,
+  constraint divers_pkey primary key (diver),
+  constraint divers_first_name_check check (
+    (
+      TRIM(
+        both
+        from
+          first_name
+      ) <> ''::text
+    )
+  ),
+  constraint divers_last_name_check check (
+    (
+      TRIM(
+        both
+        from
+          last_name
+      ) <> ''::text
+    )
+  ),
+  constraint divers_season_check check (
+    (season = any (array['Girls'::text, 'Boys'::text]))
+  )
+) TABLESPACE pg_default;
+
+
+
+
+
+
+
+create table public.dives (
+  dive_number text not null,
+  description text not null,
+  dd numeric(2, 1) not null,
+  constraint dives_pkey primary key (dive_number)
+) TABLESPACE pg_default;
+
+
+
+
+create table public.meets (
+  meet text GENERATED ALWAYS as (
+    (
+      (
+        (
+          (
+            (
+              (
+                case
+                  when (
+                    (season = 'Boys'::text)
+                    and (
+                      EXTRACT(
+                        month
+                        from
+                          date
+                      ) > (8)::numeric
+                    )
+                  ) then (
+                    (
+                      (
+                        EXTRACT(
+                          year
+                          from
+                            date
+                        )
+                      )::integer + 1
+                    )
+                  )::text
+                  else (
+                    (
+                      EXTRACT(
+                        year
+                        from
+                          date
+                      )
+                    )::integer
+                  )::text
+                end || '_'::text
+              ) || upper("left" (season, 1))
+            ) || '_'::text
+          ) || regexp_replace(opponent, '\s+'::text, ''::text, 'g'::text)
+        ) || '_'::text
+      ) || type
+    )
+  ) STORED not null,
+  date date not null,
+  season text not null,
+  opponent text not null,
+  type text not null,
+  constraint meets_pkey primary key (meet),
+  constraint meets_opponent_check check (
+    (
+      (opponent !~ '\s'::text)
+      and (opponent <> ''::text)
+    )
+  ),
+  constraint meets_season_check check (
+    (season = any (array['Girls'::text, 'Boys'::text]))
+  ),
+  constraint meets_type_check check (
+    (
+      type = any (
+        array[
+          'Dual'::text,
+          'Invite'::text,
+          'Championship'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+
+
+
+create table public.results (
+  entryid bigint generated always as identity not null,
+  meet text not null,
+  diver text not null,
+  dive_number text not null,
+  type text not null,
+  award numeric(4, 2) not null,
+  score numeric(5, 2) not null,
+  constraint results_pkey primary key (entryid),
+  constraint results_dive_number_fkey foreign KEY (dive_number) references dives (dive_number),
+  constraint results_diver_fkey foreign KEY (diver) references divers (diver),
+  constraint results_meet_fkey foreign KEY (meet) references meets (meet),
+  constraint results_award_check check ((award >= (0)::numeric)),
+  constraint results_type_check check ((type = any (array['V'::text, 'O'::text])))
+) TABLESPACE pg_default;
+
+create trigger trg_calculate_result_score BEFORE INSERT
+or
+update OF award,
+dive_number on results for EACH row
+execute FUNCTION calculate_result_score ();
+
+
+
+
+
