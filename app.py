@@ -366,7 +366,7 @@ elif page == "Add Results":
         default_df = pd.DataFrame(
             {
                 "Dive Number": [None] * dive_count,
-                "Type": ["V"] * dive_count,
+                "Type": ["O"] * dive_count,
                 "Award": [None] * dive_count,
                 "Score": [None] * dive_count
             }
