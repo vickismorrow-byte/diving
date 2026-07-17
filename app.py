@@ -14,6 +14,8 @@ from reportlab.platypus import (
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
+from power_rankings import render_power_rankings_page
+
 # =====================================================
 # PAGE CONFIG
 # =====================================================
@@ -93,7 +95,8 @@ page = st.sidebar.radio(
         "Add Diver",
         "Add Meet",
         "Add Results",
-        "Top Scores"
+        "Top Scores",
+        "Power Rankings"
     ]
 )
 
@@ -820,3 +823,6 @@ elif page == "Top Scores":
         use_container_width=True,
         hide_index=True
     )
+
+elif page == "Power Rankings":
+    render_power_rankings_page(supabase)
