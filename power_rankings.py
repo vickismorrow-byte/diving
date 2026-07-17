@@ -382,16 +382,6 @@ def render_power_rankings_page(supabase):
 
     st.subheader("🏆 Power Rankings")
 
-    st.success(
-        """
-    🏅 Tentative Sectional Qualification
-
-    • Rank #1 – Tentative Sectional Diver
-    • Rank #2 – Tentative Sectional Diver
-    • Rank #3 – Tentative Sectional Alternate
-    """
-    )
-
     summary = rankings[display_cols]
 
     st.dataframe(
@@ -401,38 +391,25 @@ def render_power_rankings_page(supabase):
     )
 
     st.markdown("---")
-    st.subheader("Diver Breakdown")
 
-    for _, row in rankings.iterrows():
+    show_metrics = st.checkbox(
+        "Show Detailed Metrics"
+    )
 
-        badge = ""
+    if show_metrics:
 
-        if row["Power Ranking"] in [1, 2]:
-            badge = "🏅 Tentative Sectional Diver"
-        elif row["Power Ranking"] == 3:
-            badge = "🥉 Tentative Sectional Alternate"
+        detailed_cols = [
+            "Power Ranking",
+            "Diver",
+            "Power Points",
+            *METRICS
+        ]
 
-        with st.expander(
-            f"#{row['Power Ranking']} | "
-            f"{row['Diver']} | "
-            f"{row['Power Points']} pts "
-            f"{badge}"
-        ):
-
-            metrics_df = pd.DataFrame({
-                "Metric": METRICS,
-                "Score": [row[m] for m in METRICS],
-                "Ranking Points": [
-                    row[f"{m} Pts"]
-                    for m in METRICS
-                ]
-            })
-
-            st.dataframe(
-                metrics_df,
-                use_container_width=True,
-                hide_index=True
-            )
+        st.dataframe(
+            rankings[detailed_cols],
+            use_container_width=True,
+            hide_index=True
+        )
 
     # -------------------------
     # CSV MEDIUM
