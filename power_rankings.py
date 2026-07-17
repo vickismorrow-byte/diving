@@ -289,7 +289,15 @@ def assign_points(rank_df, metric):
 
 def render_power_rankings_page(supabase):
 
-    st.header("Power Rankings")
+    col1, col2 = st.columns([3,2])
+    
+    with col1:
+        st.header("Power Rankings")
+
+    with col2:
+        show_metrics = st.checkbox(
+            "Show Detailed Metrics"
+        )
 
     df = build_results_dataframe(supabase)
 
@@ -391,10 +399,6 @@ def render_power_rankings_page(supabase):
     )
 
     st.markdown("---")
-
-    show_metrics = st.checkbox(
-        "Show Detailed Metrics"
-    )
 
     if show_metrics:
 
