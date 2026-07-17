@@ -361,25 +361,91 @@ def render_power_rankings_page(supabase):
         .astype(int)
     )
 
+    rankings["Designation"] = ""
+
+    rankings.loc[
+        rankings["Power Ranking"].isin([1, 2]),
+        "Designation"
+    ] = "🏅 Tentative Sectional Diver"
+
+    rankings.loc[
+        rankings["Power Ranking"] == 3,
+        "Designation"
+    ] = "🥉 Tentative Sectional Alternate"
+
     display_cols = [
+        "Power Ranking",
+        "Diver",
+        "Designation",
+        "Power Points"
+    ]
+
+    st.subheader("🏆 Power Rankings")
+
+    st.success(
+        """
+    🏅 Tentative Sectional Qualification
+
+    • Rank #1 – Tentative Sectional Diver
+    • Rank #2 – Tentative Sectional Diver
+    • Rank #3 – Tentative Sectional Alternate
+    """
+    )
+
+    summary = rankings[display_cols]
+
+    st.dataframe(
+        summary,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    st.markdown("---")
+    st.subheader("Diver Breakdown")
+
+    for _, row in rankings.iterrows():
+
+        badge = ""
+
+        if row["Power Ranking"] in [1, 2]:
+            badge = "🏅 Tentative Sectional Diver"
+        elif row["Power Ranking"] == 3:
+            badge = "🥉 Tentative Sectional Alternate"
+
+        with st.expander(
+            f"#{row['Power Ranking']} | "
+            f"{row['Diver']} | "
+            f"{row['Power Points']} pts "
+            f"{badge}"
+        ):
+
+            metrics_df = pd.DataFrame({
+                "Metric": METRICS,
+                "Score": [row[m] for m in METRICS],
+                "Ranking Points": [
+                    row[f"{m} Pts"]
+                    for m in METRICS
+                ]
+            })
+
+            st.dataframe(
+                metrics_df,
+                use_container_width=True,
+                hide_index=True
+            )
+
+    # -------------------------
+    # CSV MEDIUM
+    # -------------------------
+
+    export_cols = [
         "Power Ranking",
         "Diver",
         *point_cols,
         "Power Points"
     ]
 
-    st.subheader("Display")
-
-    st.dataframe(
-        rankings[display_cols],
-        use_container_width=True
-    )
-
-    # -------------------------
-    # CSV MEDIUM
-    # -------------------------
-
-    csv_medium = rankings[display_cols].to_csv(
+    csv_medium = rankings[export_cols].to_csv(
         index=False
     )
 
@@ -461,13 +527,13 @@ def render_power_rankings_page(supabase):
         )
     )
 
-    pdf_table = [display_cols]
+    pdf_table = [export_cols]
 
     for _, row in rankings.iterrows():
 
         pdf_table.append([
             row[col]
-            for col in display_cols
+            for col in export_cols
         ])
 
     tbl = Table(pdf_table)
