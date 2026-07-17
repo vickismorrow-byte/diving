@@ -596,74 +596,102 @@ elif page == "Top Scores":
 
     if score_type == "Top Scores":
 
-        result_frames = []
-
-        six_df = df[df["6-Dive Score"].notna()].copy()
-
-        if not six_df.empty:
+        if format_filter == "6-Dive":
 
             idx = (
-                six_df.groupby("diver")["6-Dive Score"]
+                df.groupby("diver")["6-Dive Score"]
                 .idxmax()
             )
 
-            best_6 = six_df.loc[idx].copy()
+            df = df.loc[idx]
 
-            best_6["Format"] = "6-Dive"
-
-            best_6["Score"] = best_6["6-Dive Score"]
-
-            result_frames.append(
-                best_6[["diver", "meet", "Format", "Score"]]
-            )
-
-        eleven_df = df[df["11-Dive Score"].notna()].copy()
-
-        if not eleven_df.empty:
+        elif format_filter == "11-Dive":
 
             idx = (
-                eleven_df.groupby("diver")["11-Dive Score"]
+                df.groupby("diver")["11-Dive Score"]
                 .idxmax()
             )
 
-            best_11 = eleven_df.loc[idx].copy()
-
-            best_11["Format"] = "11-Dive"
-
-            best_11["Score"] = best_11["11-Dive Score"]
-
-            result_frames.append(
-                best_11[["diver", "meet", "Format", "Score"]]
-            )
-
-        if result_frames:
-
-            display = pd.concat(
-                result_frames,
-                ignore_index=True
-            )
+            df = df.loc[idx]
 
         else:
 
-            display = pd.DataFrame(
-                columns=[
-                    "diver",
-                    "meet",
-                    "Format",
-                    "Score"
-                ]
+            top_frames = []
+
+            six_df = df[df["6-Dive Score"].notna()]
+
+            if not six_df.empty:
+
+                idx = (
+                    six_df.groupby("diver")["6-Dive Score"]
+                    .idxmax()
+                )
+
+                best6 = six_df.loc[idx].copy()
+
+                best6["Format"] = "6-Dive"
+
+                best6["Score"] = best6["6-Dive Score"]
+
+                top_frames.append(
+                    best6[
+                        ["diver", "meet", "Format", "Score"]
+                    ]
+                )
+
+            eleven_df = df[df["11-Dive Score"].notna()]
+
+            if not eleven_df.empty:
+
+                idx = (
+                    eleven_df.groupby("diver")["11-Dive Score"]
+                    .idxmax()
+                )
+
+                best11 = eleven_df.loc[idx].copy()
+
+                best11["Format"] = "11-Dive"
+
+                best11["Score"] = best11["11-Dive Score"]
+
+                top_frames.append(
+                    best11[
+                        ["diver", "meet", "Format", "Score"]
+                    ]
+                )
+
+            if top_frames:
+
+                display = pd.concat(
+                    top_frames,
+                    ignore_index=True
+                )
+
+            else:
+
+                display = pd.DataFrame(
+                    columns=[
+                        "diver",
+                        "meet",
+                        "Format",
+                        "Score"
+                    ]
+                )
+
+            display = display.rename(
+                columns={
+                    "diver": "Diver",
+                    "meet": "Meet"
+                }
             )
 
-        display = display.rename(
-            columns={
-                "diver": "Diver",
-                "meet": "Meet"
-            }
-        )
+            rank_col = "Score"
 
-        rank_col = "Score"
+    if score_type == "Top Scores" and format_filter == "All":
 
-    if format_filter == "6-Dive":
+        pass
+
+    elif format_filter == "6-Dive":
 
         display = (
             df[
@@ -727,6 +755,17 @@ elif page == "Top Scores":
         "Rank",
         range(1, len(display) + 1)
     )
+
+    if "Score" in display.columns:
+        display = display.sort_values(
+            "Score",
+            ascending=False
+        ).reset_index(drop=True)
+
+        display["Rank"] = range(
+            1,
+            len(display) + 1
+        )
 
     c1, c2, c3 = st.columns(3)
 
