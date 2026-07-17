@@ -26,6 +26,12 @@ st.set_page_config(
     layout="wide"
 )
 
+if "is_admin" not in st.session_state:
+    st.session_state.is_admin = False
+
+if "user_email" not in st.session_state:
+    st.session_state.user_email = None
+
 # =====================================================
 # SUPABASE
 # =====================================================
@@ -35,9 +41,23 @@ supabase = create_client(
     st.secrets["supabase"]["key"]
 )
 
+
+
 # =====================================================
 # HELPERS
 # =====================================================
+
+def authenticate_user(email, password):
+    response = (
+        supabase.table("users")
+        .select("email, is_admin")
+        .eq("email", email)
+        .eq("password", password)
+        .execute()
+    )
+
+    return response.data[0] if response.data else None
+
 
 @st.cache_data(ttl=60)
 def get_divers():
@@ -89,22 +109,61 @@ def build_dd_lookup():
 # SIDEBAR
 # =====================================================
 
-page = st.sidebar.radio(
-    "Navigation",
-    [
+with st.sidebar:
+
+    if not st.session_state.is_admin:
+
+        st.subheader("Admin Login")
+
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+
+        if st.button("Login"):
+            user = authenticate_user(email, password)
+
+            if user:
+                st.session_state.is_admin = user["is_admin"]
+                st.session_state.user_email = user["email"]
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
+
+    else:
+        st.success(f"Logged in as {st.session_state.user_email}")
+
+        if st.button("Logout"):
+            st.session_state.is_admin = False
+            st.session_state.user_email = None
+            st.rerun()
+
+
+if st.session_state.is_admin:
+    pages = [
         "Add Diver",
         "Add Meet",
         "Add Results",
         "Top Scores",
         "Power Rankings"
     ]
-)
+else:
+    pages = [
+        "Top Scores",
+        "Power Rankings"
+    ]
+
+page = st.sidebar.radio("Navigation", pages)
+
 
 # =====================================================
 # ADD DIVER
 # =====================================================
 
 if page == "Add Diver":
+
+    if not st.session_state.is_admin:
+        st.error("Admin access required")
+        st.stop()
+
 
     st.title("Add Diver")
 
@@ -165,6 +224,11 @@ if page == "Add Diver":
 # =====================================================
 
 elif page == "Add Meet":
+
+    if not st.session_state.is_admin:
+        st.error("Admin access required")
+        st.stop()
+
 
     st.title("Add Meet")
 
@@ -240,6 +304,10 @@ elif page == "Add Meet":
 # =====================================================
 
 elif page == "Add Results":
+
+    if not st.session_state.is_admin:
+        st.error("Admin access required")
+        st.stop()
 
     st.title("Add Results")
 
