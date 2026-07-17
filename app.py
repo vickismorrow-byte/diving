@@ -596,37 +596,73 @@ elif page == "Top Scores":
 
     if score_type == "Top Scores":
 
-        if format_filter == "6-Dive":
+    result_frames = []
 
-            idx = (
-                df.groupby("diver")["6-Dive Score"]
-                .idxmax()
-            )
+    six_df = df[df["6-Dive Score"].notna()].copy()
 
-            df = df.loc[idx]
+    if not six_df.empty:
 
-        elif format_filter == "11-Dive":
+        idx = (
+            six_df.groupby("diver")["6-Dive Score"]
+            .idxmax()
+        )
 
-            idx = (
-                df.groupby("diver")["11-Dive Score"]
-                .idxmax()
-            )
+        best_6 = six_df.loc[idx].copy()
 
-            df = df.loc[idx]
+        best_6["Format"] = "6-Dive"
 
-        else:
+        best_6["Score"] = best_6["6-Dive Score"]
 
-            df["Best Score"] = df[
-                ["6-Dive Score", "11-Dive Score"]
-            ].max(axis=1)
+        result_frames.append(
+            best_6[["diver", "meet", "Format", "Score"]]
+        )
 
-            idx = (
-                df.groupby("diver")["Best Score"]
-                .idxmax()
-            )
+    eleven_df = df[df["11-Dive Score"].notna()].copy()
 
-            df = df.loc[idx]
+    if not eleven_df.empty:
 
+        idx = (
+            eleven_df.groupby("diver")["11-Dive Score"]
+            .idxmax()
+        )
+
+        best_11 = eleven_df.loc[idx].copy()
+
+        best_11["Format"] = "11-Dive"
+
+        best_11["Score"] = best_11["11-Dive Score"]
+
+        result_frames.append(
+            best_11[["diver", "meet", "Format", "Score"]]
+        )
+
+    if result_frames:
+
+        display = pd.concat(
+            result_frames,
+            ignore_index=True
+        )
+
+    else:
+
+        display = pd.DataFrame(
+            columns=[
+                "diver",
+                "meet",
+                "Format",
+                "Score"
+            ]
+        )
+
+    display = display.rename(
+        columns={
+            "diver": "Diver",
+            "meet": "Meet"
+        }
+    )
+
+    rank_col = "Score"
+    
     if format_filter == "6-Dive":
 
         display = (
