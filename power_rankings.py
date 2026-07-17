@@ -288,16 +288,8 @@ def assign_points(rank_df, metric):
 
 
 def render_power_rankings_page(supabase):
-
-    col1, col2 = st.columns([3,2])
     
-    with col1:
-        st.header("Power Rankings")
-
-    with col2:
-        show_metrics = st.checkbox(
-            "Show Detailed Metrics"
-        )
+    st.header("Power Rankings")
 
     df = build_results_dataframe(supabase)
 
@@ -388,7 +380,17 @@ def render_power_rankings_page(supabase):
         "Power Points"
     ]
 
-    st.subheader("🏆 Power Rankings")
+
+    col1, col2 = st.columns([3,2])
+    
+    with col1:
+        st.subheader("🏆 Power Rankings")
+
+    with col2:
+        show_metrics = st.checkbox(
+            "Show Detailed Metrics"
+        )
+
 
     summary = rankings[display_cols]
 
