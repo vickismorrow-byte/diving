@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Call heartbeat function
         run: |
-          curl -X POST \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/toggle_heartbeat" \
-            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          curl --request POST \
+            --url "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/toggle_heartbeat" \
+            --header "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            --header "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
