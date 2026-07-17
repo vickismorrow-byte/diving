@@ -76,7 +76,7 @@ def build_dd_lookup():
 # SIDEBAR
 # =====================================================
 
-page = st.sidebar.button(
+page = st.sidebar.radio(
     "Navigation",
     [
         "Add Diver",
