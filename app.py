@@ -15,6 +15,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
 from power_rankings import render_power_rankings_page
+from score_progression import render_score_progression_page
 
 # =====================================================
 # PAGE CONFIG
@@ -143,11 +144,13 @@ if st.session_state.is_admin:
         "Add Meet",
         "Add Results",
         "Top Scores",
+        "Score Progression",
         "Power Rankings"
     ]
 else:
     pages = [
         "Top Scores",
+        "Score Progression",
         "Power Rankings"
     ]
 
@@ -894,3 +897,6 @@ elif page == "Top Scores":
 
 elif page == "Power Rankings":
     render_power_rankings_page(supabase)
+
+elif page == "Score Progression":
+    render_score_progression_page(supabase)
