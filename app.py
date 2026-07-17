@@ -3,6 +3,17 @@ import pandas as pd
 from datetime import date
 from supabase import create_client
 
+
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+
 # =====================================================
 # PAGE CONFIG
 # =====================================================
@@ -81,7 +92,8 @@ page = st.sidebar.radio(
     [
         "Add Diver",
         "Add Meet",
-        "Add Results"
+        "Add Results",
+        "Top Scores"
     ]
 )
 
@@ -394,3 +406,417 @@ elif page == "Add Results":
 
     except Exception as e:
         st.error(f"Unable to load results page: {e}")
+
+# =====================================================
+# TOP SCORES
+# =====================================================
+
+elif page == "Top Scores":
+
+    from io import BytesIO
+    from reportlab.platypus import (
+        SimpleDocTemplate,
+        Table,
+        TableStyle,
+        Paragraph,
+        Spacer,
+    )
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet
+
+    st.title("🏆 Top Scores")
+
+    @st.cache_data(ttl=60)
+    def get_results_summary():
+
+        response = (
+            supabase.table("results")
+            .select("meet,diver,score")
+            .execute()
+        )
+
+        df = pd.DataFrame(response.data)
+
+        if df.empty:
+            return df
+
+        summary = (
+            df.groupby(["meet", "diver"], as_index=False)
+            .agg(
+                total_score=("score", "sum"),
+                dives=("score", "size")
+            )
+        )
+
+        summary["format"] = summary["dives"].apply(
+            lambda x: "6-Dive" if x == 6 else (
+                "11-Dive" if x == 11 else None
+            )
+        )
+
+        score_6 = (
+            summary[summary["format"] == "6-Dive"]
+            [["meet", "diver", "total_score"]]
+            .rename(columns={"total_score": "6-Dive Score"})
+        )
+
+        score_11 = (
+            summary[summary["format"] == "11-Dive"]
+            [["meet", "diver", "total_score"]]
+            .rename(columns={"total_score": "11-Dive Score"})
+        )
+
+        return score_6.merge(
+            score_11,
+            on=["meet", "diver"],
+            how="outer"
+        )
+
+    def build_pdf(df):
+
+        buffer = BytesIO()
+
+        doc = SimpleDocTemplate(buffer)
+
+        styles = getSampleStyleSheet()
+
+        elements = [
+            Paragraph("Top Scores Report", styles["Title"]),
+            Spacer(1, 12)
+        ]
+
+        table = Table(
+            [df.columns.tolist()] + df.values.tolist()
+        )
+
+        table.setStyle(
+            TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.navy),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ])
+        )
+
+        elements.append(table)
+
+        doc.build(elements)
+
+        buffer.seek(0)
+
+        return buffer
+
+    scores = get_results_summary()
+
+    if scores.empty:
+        st.info("No results found.")
+        st.stop()
+
+    scores["Year"] = scores["meet"].str[:4]
+
+    scores["Season"] = scores["meet"].str[5].map({
+        "G": "Girls",
+        "B": "Boys"
+    })
+
+    years = sorted(
+        scores["Year"].dropna().unique(),
+        reverse=True
+    )
+
+    st.markdown("### 🎯 Required Filters")
+
+    with st.container(border=True):
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            year = st.selectbox(
+                "Year",
+                years
+            )
+
+        with col2:
+            season = st.selectbox(
+                "Season",
+                ["Girls", "Boys"],
+                index=0
+            )
+
+        with col3:
+            score_type = st.selectbox(
+                "Type",
+                ["Top Scores", "All Scores"]
+            )
+
+    with st.expander("⚙️ Optional Filters", expanded=False):
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            meet = st.selectbox(
+                "Meet",
+                ["All"] + sorted(
+                    scores["meet"].dropna().unique().tolist()
+                )
+            )
+
+        with col2:
+            diver = st.selectbox(
+                "Diver",
+                ["All"] + sorted(
+                    scores["diver"].dropna().unique().tolist()
+                )
+            )
+
+        with col3:
+            format_filter = st.selectbox(
+                "Format",
+                ["All", "6-Dive", "11-Dive"]
+            )
+
+    df = scores.copy()
+
+    df = df[
+        (df["Year"] == year) &
+        (df["Season"] == season)
+    ]
+
+    if meet != "All":
+        df = df[df["meet"] == meet]
+
+    if diver != "All":
+        df = df[df["diver"] == diver]
+
+    if format_filter == "6-Dive":
+        df = df[df["6-Dive Score"].notna()]
+
+    elif format_filter == "11-Dive":
+        df = df[df["11-Dive Score"].notna()]
+
+    if score_type == "Top Scores":
+
+        if format_filter == "6-Dive":
+
+            idx = (
+                df.groupby("diver")["6-Dive Score"]
+                .idxmax()
+            )
+
+            df = df.loc[idx]
+
+        elif format_filter == "11-Dive":
+
+            idx = (
+                df.groupby("diver")["11-Dive Score"]
+                .idxmax()
+            )
+
+            df = df.loc[idx]
+
+        else:
+
+            top_frames = []
+
+            six_df = df[df["6-Dive Score"].notna()]
+
+            if not six_df.empty:
+
+                idx = (
+                    six_df.groupby("diver")["6-Dive Score"]
+                    .idxmax()
+                )
+
+                best6 = six_df.loc[idx].copy()
+
+                best6["Format"] = "6-Dive"
+
+                best6["Score"] = best6["6-Dive Score"]
+
+                top_frames.append(
+                    best6[
+                        ["diver", "meet", "Format", "Score"]
+                    ]
+                )
+
+            eleven_df = df[df["11-Dive Score"].notna()]
+
+            if not eleven_df.empty:
+
+                idx = (
+                    eleven_df.groupby("diver")["11-Dive Score"]
+                    .idxmax()
+                )
+
+                best11 = eleven_df.loc[idx].copy()
+
+                best11["Format"] = "11-Dive"
+
+                best11["Score"] = best11["11-Dive Score"]
+
+                top_frames.append(
+                    best11[
+                        ["diver", "meet", "Format", "Score"]
+                    ]
+                )
+
+            if top_frames:
+
+                display = pd.concat(
+                    top_frames,
+                    ignore_index=True
+                )
+
+            else:
+
+                display = pd.DataFrame(
+                    columns=[
+                        "diver",
+                        "meet",
+                        "Format",
+                        "Score"
+                    ]
+                )
+
+            display = display.rename(
+                columns={
+                    "diver": "Diver",
+                    "meet": "Meet"
+                }
+            )
+
+            rank_col = "Score"
+
+    if score_type == "Top Scores" and format_filter == "All":
+
+        pass
+
+    elif format_filter == "6-Dive":
+
+        display = (
+            df[
+                ["diver", "meet", "6-Dive Score"]
+            ]
+            .rename(columns={
+                "diver": "Diver",
+                "meet": "Meet",
+                "6-Dive Score": "Score"
+            })
+        )
+
+        rank_col = "Score"
+
+    elif format_filter == "11-Dive":
+
+        display = (
+            df[
+                ["diver", "meet", "11-Dive Score"]
+            ]
+            .rename(columns={
+                "diver": "Diver",
+                "meet": "Meet",
+                "11-Dive Score": "Score"
+            })
+        )
+
+        rank_col = "Score"
+
+    else:
+
+        display = (
+            df[
+                [
+                    "diver",
+                    "meet",
+                    "6-Dive Score",
+                    "11-Dive Score"
+                ]
+            ]
+            .rename(columns={
+                "diver": "Diver",
+                "meet": "Meet"
+            })
+        )
+
+        display["Ranking Score"] = display[
+            ["6-Dive Score", "11-Dive Score"]
+        ].max(axis=1)
+
+        rank_col = "Ranking Score"
+
+    display = (
+        display
+        .sort_values(rank_col, ascending=False)
+        .reset_index(drop=True)
+    )
+
+    display.insert(
+        0,
+        "Rank",
+        range(1, len(display) + 1)
+    )
+
+    if "Score" in display.columns:
+        display = display.sort_values(
+            "Score",
+            ascending=False
+        ).reset_index(drop=True)
+
+        display["Rank"] = range(
+            1,
+            len(display) + 1
+        )
+
+    c1, c2, c3 = st.columns(3)
+
+    c1.metric(
+        "Divers",
+        display["Diver"].nunique()
+    )
+
+    c2.metric(
+        "Rows",
+        len(display)
+    )
+
+    c3.metric(
+        "Highest Score",
+        f"{display[rank_col].max():.2f}"
+    )
+
+    export_df = display.copy()
+
+    if "Ranking Score" in export_df.columns:
+        export_df = export_df.drop(
+            columns=["Ranking Score"]
+        )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.download_button(
+            "📥 Export CSV",
+            export_df.to_csv(index=False),
+            file_name="top_scores.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+    with col2:
+
+        pdf_buffer = build_pdf(export_df)
+
+        st.download_button(
+            "📄 Export PDF",
+            pdf_buffer,
+            file_name="top_scores.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+        )
+
+    st.dataframe(
+        export_df,
+        use_container_width=True,
+        hide_index=True
+    )
