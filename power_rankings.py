@@ -292,7 +292,7 @@ def assign_points(rank_df, metric):
 def render_power_rankings_page(supabase):
     
     st.header("Power Rankings")
-    st.subheader(
+    st.caption(
         """
         While these Power Rankings are the core basis for Sectional Team Decisons they do not take in account Attendance, Trends, Behaviors, and Attitudes. Thus the coaching staff has complete discretion when choosing Sectional Divers regardless of the Power Rankings.
 
