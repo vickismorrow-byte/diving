@@ -33,6 +33,9 @@ st.set_page_config(
     layout="wide"
 )
 
+st.title("Huskie Analytics - NNHS Diving Database")
+st.write("This app showcases the historical results of all Naperville North divers.")
+
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
