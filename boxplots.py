@@ -99,31 +99,10 @@ def render_dive_score_distribution_page(supabase):
         return
 
     # --------------------------------------------------
-    # REQUIRED DIVER FILTER
-    # --------------------------------------------------
-
-    available_divers = sorted(
-        df["diver"]
-        .dropna()
-        .unique()
-        .tolist()
-    )
-
-    selected_diver = st.selectbox(
-        "Diver *",
-        available_divers
-    )
-
-    filtered = df[
-        df["diver"] == selected_diver
-    ].copy()
-
-    # --------------------------------------------------
     # OPTIONAL SEASON FILTER
     # --------------------------------------------------
-
     available_seasons = sorted(
-        filtered["Season"]
+        df["Season"]
         .dropna()
         .unique()
         .tolist()
@@ -134,10 +113,31 @@ def render_dive_score_distribution_page(supabase):
         ["All"] + available_seasons
     )
 
+    filtered = df.copy()
+
     if selected_season != "All":
         filtered = filtered[
             filtered["Season"] == selected_season
         ]
+
+    # --------------------------------------------------
+    # REQUIRED DIVER FILTER
+    # --------------------------------------------------
+    available_divers = sorted(
+        filtered["diver"]
+        .dropna()
+        .unique()
+        .tolist()
+    )
+
+    selected_diver = st.selectbox(
+        "Diver *",
+        available_divers
+    )
+
+    filtered = filtered[
+        filtered["diver"] == selected_diver
+    ].copy()
 
     # --------------------------------------------------
     # OPTIONAL YEAR FILTER
