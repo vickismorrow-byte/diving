@@ -1,3 +1,10 @@
+create table public.admin_heartbeat (
+  id bigint generated always as identity not null,
+  timestamp timestamp with time zone not null default now(),
+  action text not null,
+  constraint admin_heartbeat_pkey primary key (id)
+) TABLESPACE pg_default;
+
 create table public.divers (
   diver text GENERATED ALWAYS as (
     (
@@ -33,19 +40,12 @@ create table public.divers (
 
 
 
-
-
-
-
 create table public.dives (
   dive_number text not null,
   description text not null,
   dd numeric(2, 1) not null,
   constraint dives_pkey primary key (dive_number)
 ) TABLESPACE pg_default;
-
-
-
 
 create table public.meets (
   meet text GENERATED ALWAYS as (
@@ -121,8 +121,6 @@ create table public.meets (
 ) TABLESPACE pg_default;
 
 
-
-
 create table public.results (
   entryid bigint generated always as identity not null,
   meet text not null,
@@ -146,6 +144,13 @@ dive_number on results for EACH row
 execute FUNCTION calculate_result_score ();
 
 
-
-
+create table public.users (
+  email text not null,
+  first_name text not null,
+  last_name text not null,
+  password text not null,
+  is_admin boolean not null default false,
+  is_approved boolean not null default false,
+  constraint users_pkey primary key (email)
+) TABLESPACE pg_default;
 
