@@ -41,8 +41,8 @@ def clear_cache():
     st.cache_data.clear()
 
 
-def build_dd_lookup():
-    dives = get_dives()
+def build_dd_lookup(supabase):
+    dives = get_dives(supabase)
 
     return {
         row["dive_number"]: float(row["dd"])
