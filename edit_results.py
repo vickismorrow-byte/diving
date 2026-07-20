@@ -48,7 +48,7 @@ def render_edit_results_page(supabase):
     with col2:
         season_filter = st.selectbox(
             "Season (Optional)",
-            ["All", "Fall", "Winter", "Spring", "Summer"],
+            ["All", "Girls", "Boys"],
         )
 
     # ---------------------------------
@@ -78,10 +78,12 @@ def render_edit_results_page(supabase):
         ]
 
     if season_filter != "All":
+        season_code = "G" if season_filter == "Girls" else "B"
+
         meet_rows = [
             r
             for r in meet_rows
-            if r.get("season") == season_filter
+            if f"_{season_code}_" in r.get("meet", "")
         ]
 
     meets = sorted(
