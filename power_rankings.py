@@ -437,7 +437,7 @@ def render_power_rankings_page(supabase):
 
             grid_df[f"{pts_col}_tooltip"] = rankings.apply(
                 lambda r:
-                    f"<b>{r['Diver']}</b>\n"
+                    f"{r['Diver']}\n"
                     f"Dive: {r.get(dive_col,'')}\n"
                     f"Meet: {r.get(meet_col,'')}\n"
                     f"Score: {r.get(score_col,0):.2f}",
