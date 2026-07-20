@@ -49,6 +49,15 @@ def build_dd_lookup(supabase):
         for row in dives
     }
 
+def dive_group(dive_number):
+    # First digit identifies the group:
+    # 1=Forward, 2=Back, 3=Reverse, 4=Inward, 5=Twisting
+    return str(dive_number)[0]
+
+def dive_base_number(dive_number):
+    # 101A and 101B count as the same dive number
+    return str(dive_number)[:-1]
+
 
 def render_add_results_page(supabase):
     st.title("Add Results")
@@ -208,6 +217,124 @@ def render_add_results_page(supabase):
                         "score": 0
                     }
                 )
+
+            # Skip all validation if 999D exists
+            all_dives = [str(r["dive_number"]) for r in rows_to_insert]
+
+            if "999D" not in all_dives:
+
+                if dive_count == 6:
+                    voluntary = [r for r in rows_to_insert if r["type"] == "V"]
+                    optional = [r for r in rows_to_insert if r["type"] == "O"]
+
+                    if len(voluntary) != 1:
+                        raise ValueError(
+                            "6-dive meet requires exactly 1 voluntary dive."
+                        )
+
+                    if len(optional) != 5:
+                        raise ValueError(
+                            "6-dive meet requires exactly 5 optional dives."
+                        )
+
+                    categories = {
+                        dive_group(r["dive_number"])
+                        for r in rows_to_insert
+                    }
+
+                    if len(categories) < 4:
+                        raise ValueError(
+                            "6-dive meet must contain dives from at least 4 categories."
+                        )
+
+                elif dive_count == 11:
+
+                    voluntary = [r for r in rows_to_insert if r["type"] == "V"]
+                    optional = [r for r in rows_to_insert if r["type"] == "O"]
+
+                    if len(voluntary) != 5:
+                        raise ValueError(
+                            "11-dive meet requires 5 voluntary dives."
+                        )
+
+                    if len(optional) != 6:
+                        raise ValueError(
+                            "11-dive meet requires 6 optional dives."
+                        )
+
+                    # Rule 2
+                    voluntary_dd = sum(
+                        dd_lookup[r["dive_number"]]
+                        for r in voluntary
+                    )
+
+                    if voluntary_dd > 9.0:
+                        raise ValueError(
+                            "Voluntary DD total must be 9.0 or less."
+                        )
+
+                    # Rule 3
+                    vol_groups = {
+                        dive_group(r["dive_number"])
+                        for r in voluntary
+                    }
+
+                    if len(vol_groups) != 5:
+                        raise ValueError(
+                            "The 5 voluntary dives must be from all 5 dive groups."
+                        )
+
+                    # Rule 4
+                    opt_groups = [
+                        dive_group(r["dive_number"])
+                        for r in optional
+                    ]
+
+                    if set(opt_groups) != {"1", "2", "3", "4", "5"}:
+                        raise ValueError(
+                            "Optional dives must include all 5 dive groups."
+                        )
+
+                    # Rule 6
+                    first8 = rows_to_insert[:8]
+
+                    first8_groups = {
+                        dive_group(r["dive_number"])
+                        for r in first8
+                    }
+
+                    if len(first8_groups) != 5:
+                        raise ValueError(
+                            "All 5 dive groups must be represented in the first 8 dives."
+                        )
+
+                    # Rule 7
+                    first8_optional = [
+                        r for r in first8
+                        if r["type"] == "O"
+                    ]
+
+                    first8_optional_groups = [
+                        dive_group(r["dive_number"])
+                        for r in first8_optional
+                    ]
+
+                    if len(first8_optional_groups) != len(set(first8_optional_groups)):
+                        raise ValueError(
+                            "Optional dives in the first 8 rounds must all be from different groups."
+                        )
+
+                    # Rule 8
+                    base_numbers = [
+                        dive_base_number(r["dive_number"])
+                        for r in rows_to_insert
+                    ]
+
+                    if len(base_numbers) != len(set(base_numbers)):
+                        raise ValueError(
+                            "All 11 dive numbers must be different."
+                        )
+
 
             supabase.table("results").insert(
                 rows_to_insert
