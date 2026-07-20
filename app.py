@@ -3,6 +3,11 @@ import pandas as pd
 from datetime import date
 from supabase import create_client
 
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
+
 
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -27,11 +32,20 @@ st.set_page_config(
     layout="wide"
 )
 
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
 
+if "is_approved" not in st.session_state:
+    st.session_state.is_approved = False
+
 if "user_email" not in st.session_state:
     st.session_state.user_email = None
+
+if "first_name" not in st.session_state:
+    st.session_state.first_name = ""
 
 # =====================================================
 # SUPABASE
@@ -48,16 +62,40 @@ supabase = create_client(
 # HELPERS
 # =====================================================
 
+from werkzeug.security import check_password_hash
+
 def authenticate_user(email, password):
+
     response = (
         supabase.table("users")
-        .select("email, is_admin")
-        .eq("email", email)
-        .eq("password", password)
+        .select("*")
+        .eq(
+            "email",
+            email.lower().strip()
+        )
         .execute()
     )
 
-    return response.data[0] if response.data else None
+    if not response.data:
+        st.error("Invalid email or password.")
+        return None
+
+    user = response.data[0]
+
+    if not check_password_hash(
+        user["password_hash"],
+        password
+    ):
+        st.error("Invalid email or password.")
+        return None
+
+    if not user["is_approved"]:
+        st.error(
+            "Your account has not yet been approved."
+        )
+        return None
+
+    return user
 
 
 @st.cache_data(ttl=60)
@@ -110,8 +148,141 @@ def build_dd_lookup():
 # SIDEBAR
 # =====================================================
 
+# =====================================================
+# AUTHENTICATION GATE
+# =====================================================
+
+if not st.session_state.authenticated:
+
+    tab1, tab2 = st.tabs(["Login", "Create Account"])
+
+    # --------------------------
+    # LOGIN
+    # --------------------------
+
+    with tab1:
+
+        st.header("Login")
+
+        login_email = st.text_input(
+            "Email",
+            key="login_email"
+        )
+
+        login_password = st.text_input(
+            "Password",
+            type="password",
+            key="login_password"
+        )
+
+        if st.button("Login"):
+
+            user = authenticate_user(
+                login_email,
+                login_password
+            )
+
+            if user:
+
+                st.session_state.authenticated = True
+                st.session_state.user_email = user["email"]
+                st.session_state.is_admin = user["is_admin"]
+                st.session_state.is_approved = user["is_approved"]
+
+                st.rerun()
+
+    # --------------------------
+    # CREATE ACCOUNT
+    # --------------------------
+
+    with tab2:
+
+        st.header("Create Account")
+
+        first_name = st.text_input(
+            "First Name"
+        )
+
+        last_name = st.text_input(
+            "Last Name"
+        )
+
+        email = st.text_input(
+            "Email Address"
+        )
+
+        password = st.text_input(
+            "Password",
+            type="password"
+        )
+
+        confirm_password = st.text_input(
+            "Confirm Password",
+            type="password"
+        )
+
+        if st.button("Create Account"):
+
+            if password != confirm_password:
+
+                st.error(
+                    "Passwords do not match."
+                )
+
+            else:
+
+                existing_user = (
+                    supabase.table("users")
+                    .select("email")
+                    .eq(
+                        "email",
+                        email.lower().strip()
+                    )
+                    .execute()
+                )
+
+                if existing_user.data:
+
+                    st.error(
+                        "Account already exists."
+                    )
+
+                else:
+
+                    (
+                        supabase.table("users")
+                        .insert({
+                            "email":
+                                email.lower().strip(),
+
+                            "first_name":
+                                first_name.title(),
+
+                            "last_name":
+                                last_name.title(),
+
+                            "password_hash":
+                                generate_password_hash(
+                                    password
+                                ),
+
+                            "is_admin": False,
+                            "is_approved": False
+                        })
+                        .execute()
+                    )
+
+                    st.success(
+                        "Account created. "
+                        "An administrator must approve "
+                        "your account before you can log in."
+                    )
+
+    st.stop()
+
 with st.sidebar:
 
+    """
     if not st.session_state.is_admin:
 
         st.subheader("Admin Login")
@@ -136,10 +307,21 @@ with st.sidebar:
             st.session_state.is_admin = False
             st.session_state.user_email = None
             st.rerun()
+    """
+
+    if st.button("Logout"):
+
+        st.session_state.authenticated = False
+        st.session_state.user_email = None
+        st.session_state.is_admin = False
+        st.session_state.is_approved = False
+
+        st.rerun()
 
 
 if st.session_state.is_admin:
     pages = [
+        "Approve Users",
         "Add Diver",
         "Add Meet",
         "Add Results",
@@ -900,3 +1082,75 @@ elif page == "Power Rankings":
 
 elif page == "Score Progression":
     render_score_progression_page(supabase)
+
+if page == "Approve Users":
+
+    st.title("User Approvals")
+
+    pending_users = (
+        supabase.table("users")
+        .select("*")
+        .eq("is_approved", False)
+        .order("last_name")
+        .execute()
+    )
+
+    if not pending_users.data:
+
+        st.success(
+            "No users awaiting approval."
+        )
+
+    for user in pending_users.data:
+
+        col1, col2, col3 = st.columns(
+            [5, 1, 1]
+        )
+
+        with col1:
+
+            st.write(
+                f"{user['first_name']} "
+                f"{user['last_name']} "
+                f"({user['email']})"
+            )
+
+        with col2:
+
+            if st.button(
+                "Approve",
+                key=f"approve_{user['email']}"
+            ):
+
+                (
+                    supabase.table("users")
+                    .update({
+                        "is_approved": True
+                    })
+                    .eq(
+                        "email",
+                        user["email"]
+                    )
+                    .execute()
+                )
+
+                st.rerun()
+
+        with col3:
+
+            if st.button(
+                "Delete",
+                key=f"delete_{user['email']}"
+            ):
+
+                (
+                    supabase.table("users")
+                    .delete()
+                    .eq(
+                        "email",
+                        user["email"]
+                    )
+                    .execute()
+                )
+
+                st.rerun()
