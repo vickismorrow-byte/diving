@@ -22,6 +22,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from power_rankings import render_power_rankings_page
 from score_progression import render_score_progression_page
 from edit_results import render_edit_results_page
+from boxplots import render_dive_score_distribution_page
 
 # =====================================================
 # PAGE CONFIG
@@ -319,13 +320,15 @@ if st.session_state.is_admin:
         "View/Edit Results",
         "Top Scores",
         "Score Progression",
-        "Power Rankings"
+        "Power Rankings",
+        "Dive Analysis"
     ]
 else:
     pages = [
         "Top Scores",
         "Score Progression",
-        "Power Rankings"
+        "Power Rankings",
+        "Dive Analysis"
     ]
 
 page = st.sidebar.radio("Navigation", pages)
@@ -1149,3 +1152,6 @@ if page == "Approve Users":
 
 elif page == "View/Edit Results":
     render_edit_results_page(supabase)
+
+elif page == "Dive Analysis":
+    render_dive_score_distribution_page(supabase)
