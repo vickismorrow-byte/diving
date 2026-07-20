@@ -437,8 +437,8 @@ def render_power_rankings_page(supabase):
 
             grid_df[f"{pts_col}_tooltip"] = rankings.apply(
                 lambda r:
-                    f"Dive: {r.get(dive_col,'')}<br>"
-                    f"Meet: {r.get(meet_col,'')}<br>"
+                    f"Dive: {r.get(dive_col,'')}\n"
+                    f"Meet: {r.get(meet_col,'')}\n"
                     f"Score: {r.get(score_col,0):.2f}",
                 axis=1
             )
@@ -454,10 +454,13 @@ def render_power_rankings_page(supabase):
         for col in [c for c in grid_df.columns if c.endswith("_tooltip")]:
             gb.configure_column(col, hide=True)
 
+        grid_options=gb.build(),
+        grid_options["enableBrowserTooltips"] = True,
+
         AgGrid(
             grid_df,
-            gridOptions=gb.build(),
-            fit_columns_on_grid_load=True,
+            gridOptions=grid_options,
+            fit_columns_on_grid_load=False,
         )
 
 
