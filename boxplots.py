@@ -161,6 +161,25 @@ def render_dive_score_distribution_page(supabase):
         ]
 
     # --------------------------------------------------
+    # OPTIONAL DATE RANGE FILTER
+    # --------------------------------------------------
+    min_date = filtered["date"].min().date()
+    max_date = filtered["date"].max().date()
+
+    date_range = st.date_input(
+        "Meet Date Range (Optional)",
+        value=(min_date, max_date),
+        min_value=min_date,
+        max_value=max_date
+    )
+
+    if len(date_range) == 2:
+        start_date, end_date = date_range
+        filtered = filtered[
+            filtered["date"].dt.date.between(start_date, end_date)
+        ]
+
+    # --------------------------------------------------
     # OPTIONAL DIVE FILTER
     # --------------------------------------------------
 
