@@ -454,8 +454,6 @@ def render_power_rankings_page(supabase):
         for col in [c for c in grid_df.columns if c.endswith("_tooltip")]:
             gb.configure_column(col, hide=True)
 
-        grid_options=gb.build()
-        grid_options["enableBrowserTooltips"] = True
 
         max_name_len = grid_df["Diver"].astype(str).str.len().max()
 
@@ -476,6 +474,10 @@ def render_power_rankings_page(supabase):
             }
         )
 
+
+        grid_options=gb.build()
+        grid_options["enableBrowserTooltips"] = True
+        
         AgGrid(
             grid_df,
             gridOptions=grid_options,
