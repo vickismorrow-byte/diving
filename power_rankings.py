@@ -2,6 +2,7 @@ import io
 import re
 import pandas as pd
 import streamlit as st
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -430,35 +431,33 @@ def render_power_rankings_page(supabase):
             ),
         }
 
-        tooltip_df = pd.DataFrame(
-            "",
-            index=rankings.index,
-            columns=detailed_cols
-        )
+        grid_df = rankings[detailed_cols].copy()
 
         for pts_col, (dive_col, meet_col, score_col) in metric_map.items():
-            if pts_col not in tooltip_df.columns:
-                continue
 
-            tooltip_df[pts_col] = rankings.apply(
-                lambda r: (
-                    f"Dive: {r.get(dive_col, 'N/A')}\n"
-                    f"Meet: {r.get(meet_col, 'N/A')}\n"
-                    f"Score: {r.get(score_col, 0):.2f}"
-                ),
+            grid_df[f"{pts_col}_tooltip"] = rankings.apply(
+                lambda r:
+                    f"Dive: {r.get(dive_col,'')}\n"
+                    f"Meet: {r.get(meet_col,'')}\n"
+                    f"Score: {r.get(score_col,0):.2f}",
                 axis=1
             )
 
-        styled = (
-            rankings[detailed_cols]
-            .style
-            .set_tooltips(tooltip_df)
-        )
+        gb = GridOptionsBuilder.from_dataframe(grid_df)
 
-        st.dataframe(
-            styled,
-            use_container_width=True,
-            hide_index=True
+        for pts_col in metric_map.keys():
+            gb.configure_column(
+                pts_col,
+                tooltipField=f"{pts_col}_tooltip"
+            )
+
+        for col in [c for c in grid_df.columns if c.endswith("_tooltip")]:
+            gb.configure_column(col, hide=True)
+
+        AgGrid(
+            grid_df,
+            gridOptions=gb.build(),
+            fit_columns_on_grid_load=True,
         )
 
 
