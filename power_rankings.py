@@ -457,10 +457,18 @@ def render_power_rankings_page(supabase):
         grid_options=gb.build()
         grid_options["enableBrowserTooltips"] = True
 
+        gb.configure_grid_options(
+            defaultColDef={
+                "wrapHeaderText": True,
+                "autoHeaderHeight": True,
+                "resizable": True,
+            }
+        )
+
         AgGrid(
             grid_df,
             gridOptions=grid_options,
-            fit_columns_on_grid_load=False,
+            fit_columns_on_grid_load=True,
         )
 
 
