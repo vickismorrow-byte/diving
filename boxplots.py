@@ -109,17 +109,13 @@ def render_dive_score_distribution_page(supabase):
         .tolist()
     )
 
-    selected_divers = st.multiselect(
+    selected_diver = st.selectbox(
         "Diver *",
         available_divers
     )
 
-    if not selected_divers:
-        st.info("Select at least one diver.")
-        return
-
     filtered = df[
-        df["diver"].isin(selected_divers)
+        df["diver"] == selected_diver
     ].copy()
 
     # --------------------------------------------------
@@ -217,6 +213,29 @@ def render_dive_score_distribution_page(supabase):
         "dive_number"
     )
 
+    
+    plot_df = plot_df.sort_values("date")
+
+    recent_meets = (
+        plot_df[["meet", "date"]]
+        .drop_duplicates()
+        .sort_values("date", ascending=False)
+        .head(3)
+    )
+
+    color_map = {}
+
+    if len(recent_meets) > 0:
+        color_map[recent_meets.iloc[0]["meet"]] = "Most Recent"
+
+    if len(recent_meets) > 1:
+        color_map[recent_meets.iloc[1]["meet"]] = "Second Most Recent"
+
+    if len(recent_meets) > 2:
+        color_map[recent_meets.iloc[2]["meet"]] = "Third Most Recent"
+
+    plot_df["Recency"] = plot_df["meet"].map(color_map)
+
     # --------------------------------------------------
     # BOXPLOT
     # --------------------------------------------------
@@ -255,11 +274,32 @@ def render_dive_score_distribution_page(supabase):
         "<extra></extra>"
     )
 
+    colors = {
+        "Most Recent": "#006400",      # Dark Green
+        "Second Most Recent": "#008000", # Green
+        "Third Most Recent": "#90EE90"   # Light Green
+    }
+
+    for label, color in colors.items():
+        recent_data = plot_df[plot_df["Recency"] == label]
+
+        fig.add_scatter(
+            x=recent_data["dive_number"],
+            y=recent_data["score"],
+            mode="markers",
+            name=label,
+            marker=dict(
+                color=color,
+                size=10,
+                line=dict(color="black", width=1)
+            )
+        )
+
     fig.update_layout(
         height=700,
         xaxis_title="Dive",
         yaxis_title="Score",
-        showlegend=False
+        showlegend=True
     )
 
     st.plotly_chart(
