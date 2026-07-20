@@ -5,3 +5,5 @@ reportlab
 plotly
 werkzeug
 streamlit-aggrid
+selenium
+webdriver-manager
