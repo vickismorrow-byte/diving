@@ -454,7 +454,7 @@ def render_power_rankings_page(supabase):
         for col in [c for c in grid_df.columns if c.endswith("_tooltip")]:
             gb.configure_column(col, hide=True)
 
-        
+
         max_name_len = int(
             grid_df["Diver"].astype(str).str.len().max()
         )
@@ -465,7 +465,7 @@ def render_power_rankings_page(supabase):
         gb.configure_column(
             field="Diver",
             width=diver_width,
-            pinned="left",
+            minWidth=diver_width,
         )
 
 
@@ -474,6 +474,7 @@ def render_power_rankings_page(supabase):
                 "wrapHeaderText": True,
                 "autoHeaderHeight": True,
                 "resizable": True,
+                "width": 50,
             }
         )
 
@@ -484,7 +485,7 @@ def render_power_rankings_page(supabase):
         AgGrid(
             grid_df,
             gridOptions=grid_options,
-            fit_columns_on_grid_load=True,
+            fit_columns_on_grid_load=False,
         )
 
 
