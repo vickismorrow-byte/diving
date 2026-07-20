@@ -411,8 +411,49 @@ def render_power_rankings_page(supabase):
             *point_cols
         ]
 
+        detailed_df = rankings[detailed_cols].copy()
+
+        tooltips = pd.DataFrame(
+            "",
+            index=detailed_df.index,
+            columns=detailed_df.columns
+        )
+
+        metric_map = {
+            "Front Vol Pts": ("Front Vol Dive", "Front Vol Meet", "Front Vol"),
+            "Front Opt Pts": ("Front Opt Dive", "Front Opt Meet", "Front Opt"),
+            "Back Vol Pts": ("Back Vol Dive", "Back Vol Meet", "Back Vol"),
+            "Back Opt Pts": ("Back Opt Dive", "Back Opt Meet", "Back Opt"),
+            "Rev Vol Pts": ("Rev Vol Dive", "Rev Vol Meet", "Rev Vol"),
+            "Rev Opt Pts": ("Rev Opt Dive", "Rev Opt Meet", "Rev Opt"),
+            "Inw Vol Pts": ("Inw Vol Dive", "Inw Vol Meet", "Inw Vol"),
+            "Inw Opt Pts": ("Inw Opt Dive", "Inw Opt Meet", "Inw Opt"),
+            "Tw Vol Pts": ("Tw Vol Dive", "Tw Vol Meet", "Tw Vol"),
+            "Tw Opt Pts": ("Tw Opt Dive", "Tw Opt Meet", "Tw Opt"),
+            "11th Dive Pts": (
+                "11th Dive Dive",
+                "11th Dive Meet",
+                "11th Dive"
+            ),
+        }
+
+        for pts_col, (dive_col, meet_col, score_col) in metric_map.items():
+            if pts_col not in tooltips.columns:
+                continue
+
+            tooltips[pts_col] = rankings.apply(
+                lambda r: (
+                    f"Dive: {r.get(dive_col, '')}\n"
+                    f"Meet: {r.get(meet_col, '')}\n"
+                    f"Score: {r.get(score_col, 0):.2f}"
+                ),
+                axis=1,
+            )
+
+        styled_df = detailed_df.style.set_tooltips(tooltips)
+
         st.dataframe(
-            rankings[detailed_cols],
+            styled_df,
             use_container_width=True,
             hide_index=True
         )
