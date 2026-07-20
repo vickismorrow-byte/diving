@@ -2,6 +2,7 @@ import io
 import re
 import pandas as pd
 import streamlit as st
+from datetime import date
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 from reportlab.platypus import (
@@ -291,6 +292,23 @@ def assign_points(rank_df, metric):
 def render_power_rankings_page(supabase):
     
     st.header("Power Rankings")
+    st.divider()
+    st.markdown("""
+        #### Power Rankings Disclaimer & Methodology
+
+        While these Power Rankings serve as the primary foundation for Sectional Team selections, they do not account for factors such as attendance, performance trends, behavior, attitude, or other coaching considerations. Therefore, the coaching staff retains full discretion in selecting sectional qualifiers, regardless of a diver’s position in the Power Rankings.
+
+        The Power Rankings are calculated using the following metrics:
+
+        - **Best 11-Dive Projection** – Generated using each diver’s best dives by category and type to create an optimized 11-dive lineup.
+        - **Best 11-Dive Meet Score** – The diver’s highest score achieved in an actual 11-dive competition.
+        - **Category & Type Performance Metrics** – Based on the diver’s top scores within each required dive category and type.
+
+        Divers are ranked within each metric and awarded points accordingly. The highest-ranked diver in a metric receives **50 points**, second place receives **49 points**, and so on. Divers without a valid score for a metric receive **0 points**. Points from all metrics are then combined to determine each diver’s **Power Points** and overall **Power Ranking**.
+
+        The purpose of this system is to use current-season performance data to identify the divers with the **greatest scoring potential** and the strongest likelihood of advancing at the sectional level.
+        """)
+    st.divider()
 
     df = build_results_dataframe(supabase)
 
@@ -300,14 +318,42 @@ def render_power_rankings_page(supabase):
 
     years = sorted(df["Year"].dropna().unique())
 
+    today = date.today()
+
+    # Year default:
+    # Jan 1 - Nov 14  -> current year
+    # Nov 15 - Dec 31 -> current year + 1
+    default_year = (
+        str(today.year)
+        if today < date(today.year, 11, 15)
+        else str(today.year + 1)
+    )
+
+    year_index = (
+        years.index(default_year)
+        if default_year in years
+        else max(0, len(years) - 1)
+    )
+
     year = st.selectbox(
         "Year",
-        years
+        years,
+        index=year_index
+    )
+
+    # Season default:
+    # Jul 1 - Nov 14 -> Girls
+    # Otherwise -> Boys
+    default_season = (
+        "Girls"
+        if date(today.year, 7, 1) <= today < date(today.year, 11, 15)
+        else "Boys"
     )
 
     season = st.selectbox(
         "Season",
-        ["Girls", "Boys"]
+        ["Girls", "Boys"],
+        index=["Girls", "Boys"].index(default_season)
     )
 
     filtered = df[
@@ -367,12 +413,12 @@ def render_power_rankings_page(supabase):
     rankings.loc[
         rankings["Power Ranking"].isin([1, 2]),
         "Designation"
-    ] = "🏅 Tentative Sectional Diver"
+    ] = "Tentative Sectional Diver"
 
     rankings.loc[
         rankings["Power Ranking"] == 3,
         "Designation"
-    ] = "🥉 Tentative Sectional Alternate"
+    ] = "Tentative Sectional Alternate"
 
     display_cols = [
         "Power Ranking",
@@ -382,12 +428,12 @@ def render_power_rankings_page(supabase):
     ]
 
 
-    col1, col2 = st.columns([3,2])
+    col1, col2, col3 = st.columns([3,3,1])
     
     with col1:
         st.subheader("🏆 Power Rankings")
 
-    with col2:
+    with col3:
         show_metrics = st.checkbox(
             "Show Detailed Metrics"
         )

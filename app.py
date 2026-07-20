@@ -29,8 +29,8 @@ from boxplots import render_dive_score_distribution_page
 # =====================================================
 
 st.set_page_config(
-    page_title="Diving Database",
-    page_icon="🏊",
+    page_title="Huskie Analytics",
+    page_icon="📊",
     layout="wide"
 )
 
@@ -311,27 +311,33 @@ with st.sidebar:
         st.rerun()
 
 
-if st.session_state.is_admin:
-    pages = [
-        "Approve Users",
-        "Add Diver",
-        "Add Meet",
-        "Add Results",
-        "View/Edit Results",
-        "Top Scores",
-        "Score Progression",
-        "Power Rankings",
-        "Dive Analysis"
-    ]
-else:
-    pages = [
-        "Top Scores",
-        "Score Progression",
-        "Power Rankings",
-        "Dive Analysis"
-    ]
+if "page" not in st.session_state:
+    st.session_state.page = "Power Rankings"
 
-page = st.sidebar.radio("Navigation", pages)
+with st.sidebar:
+
+    with st.expander("📊 Analytics", expanded=True):
+        if st.button("Top Scores"):
+            st.session_state.page = "Top Scores"
+
+        if st.button("Score Progression"):
+            st.session_state.page = "Score Progression"
+
+        if st.button("Power Rankings"):
+            st.session_state.page = "Power Rankings"
+
+        if st.button("Dive Analysis"):
+            st.session_state.page = "Dive Analysis"
+
+    if st.session_state.is_admin:
+        with st.expander("⚙️ Administration"):
+            if st.button("Approve Users"):
+                st.session_state.page = "Approve Users"
+
+            if st.button("Add Diver"):
+                st.session_state.page = "Add Diver"
+
+page = st.session_state.page
 
 
 # =====================================================

@@ -99,35 +99,10 @@ def render_dive_score_distribution_page(supabase):
         return
 
     # --------------------------------------------------
-    # REQUIRED DIVER FILTER
-    # --------------------------------------------------
-
-    available_divers = sorted(
-        df["diver"]
-        .dropna()
-        .unique()
-        .tolist()
-    )
-
-    selected_divers = st.multiselect(
-        "Diver *",
-        available_divers
-    )
-
-    if not selected_divers:
-        st.info("Select at least one diver.")
-        return
-
-    filtered = df[
-        df["diver"].isin(selected_divers)
-    ].copy()
-
-    # --------------------------------------------------
     # OPTIONAL SEASON FILTER
     # --------------------------------------------------
-
     available_seasons = sorted(
-        filtered["Season"]
+        df["Season"]
         .dropna()
         .unique()
         .tolist()
@@ -138,10 +113,31 @@ def render_dive_score_distribution_page(supabase):
         ["All"] + available_seasons
     )
 
+    filtered = df.copy()
+
     if selected_season != "All":
         filtered = filtered[
             filtered["Season"] == selected_season
         ]
+
+    # --------------------------------------------------
+    # REQUIRED DIVER FILTER
+    # --------------------------------------------------
+    available_divers = sorted(
+        filtered["diver"]
+        .dropna()
+        .unique()
+        .tolist()
+    )
+
+    selected_diver = st.selectbox(
+        "Diver *",
+        available_divers
+    )
+
+    filtered = filtered[
+        filtered["diver"] == selected_diver
+    ].copy()
 
     # --------------------------------------------------
     # OPTIONAL YEAR FILTER
@@ -162,6 +158,25 @@ def render_dive_score_distribution_page(supabase):
     if selected_year != "All":
         filtered = filtered[
             filtered["Year"] == selected_year
+        ]
+
+    # --------------------------------------------------
+    # OPTIONAL DATE RANGE FILTER
+    # --------------------------------------------------
+    min_date = filtered["date"].min().date()
+    max_date = filtered["date"].max().date()
+
+    date_range = st.date_input(
+        "Meet Date Range (Optional)",
+        value=(min_date, max_date),
+        min_value=min_date,
+        max_value=max_date
+    )
+
+    if len(date_range) == 2:
+        start_date, end_date = date_range
+        filtered = filtered[
+            filtered["date"].dt.date.between(start_date, end_date)
         ]
 
     # --------------------------------------------------
@@ -217,6 +232,29 @@ def render_dive_score_distribution_page(supabase):
         "dive_number"
     )
 
+    
+    plot_df = plot_df.sort_values("date")
+
+    recent_meets = (
+        plot_df[["meet", "date"]]
+        .drop_duplicates()
+        .sort_values("date", ascending=False)
+        .head(3)
+    )
+
+    color_map = {}
+
+    if len(recent_meets) > 0:
+        color_map[recent_meets.iloc[0]["meet"]] = "Most Recent"
+
+    if len(recent_meets) > 1:
+        color_map[recent_meets.iloc[1]["meet"]] = "Second Most Recent"
+
+    if len(recent_meets) > 2:
+        color_map[recent_meets.iloc[2]["meet"]] = "Third Most Recent"
+
+    plot_df["Recency"] = plot_df["meet"].map(color_map)
+
     # --------------------------------------------------
     # BOXPLOT
     # --------------------------------------------------
@@ -225,7 +263,7 @@ def render_dive_score_distribution_page(supabase):
         plot_df,
         x="dive_number",
         y="score",
-        points="all",
+        points=False,
         category_orders={
             "dive_number": median_order
         }
@@ -255,11 +293,51 @@ def render_dive_score_distribution_page(supabase):
         "<extra></extra>"
     )
 
+    colors = {
+        "Most Recent": "#90EE90",      # Dark Green
+        "Second Most Recent": "#008000", # Green
+        "Third Most Recent": "#006400"   # Light Green
+    }
+
+    for label, color in colors.items():
+
+        recent_data = plot_df[
+            plot_df["Recency"] == label
+        ]
+
+        fig.add_scatter(
+            x=recent_data["dive_number"],
+            y=recent_data["score"],
+            mode="markers",
+            name=label,
+            marker=dict(
+                color=color,
+                size=10,
+                line=dict(
+                    color="black",
+                    width=1
+                )
+            ),
+            customdata=recent_data[
+                [
+                    "meet",
+                    "date",
+                    "score"
+                ]
+            ],
+            hovertemplate=
+            "<b>Dive %{x}</b><br>"
+            "Score: %{y:.2f}<br>"
+            "Meet: %{customdata[0]}<br>"
+            "Date: %{customdata[1]|%Y-%m-%d}<br>"
+            "<extra></extra>"
+        )
+
     fig.update_layout(
         height=700,
         xaxis_title="Dive",
         yaxis_title="Score",
-        showlegend=False
+        showlegend=True
     )
 
     st.plotly_chart(
