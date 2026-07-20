@@ -57,22 +57,22 @@ def render_add_results_page(supabase):
 
         meets = [
             m["meet"]
-            for m in get_meets()
+            for m in get_meets(supabase)
         ]
 
         divers = [
             d["diver"]
-            for d in get_divers()
+            for d in get_divers(supabase)
         ]
 
-        dives = get_dives()
+        dives = get_dives(supabase)
 
         dive_numbers = [
             d["dive_number"]
             for d in dives
         ]
 
-        dd_lookup = build_dd_lookup()
+        dd_lookup = build_dd_lookup(supabase)
 
         if not meets:
             st.warning(
