@@ -244,7 +244,7 @@ def render_dive_score_distribution_page(supabase):
         plot_df,
         x="dive_number",
         y="score",
-        points="all",
+        points=False,
         category_orders={
             "dive_number": median_order
         }
@@ -275,13 +275,16 @@ def render_dive_score_distribution_page(supabase):
     )
 
     colors = {
-        "Most Recent": "#006400",      # Dark Green
+        "Most Recent": "#90EE90",      # Dark Green
         "Second Most Recent": "#008000", # Green
-        "Third Most Recent": "#90EE90"   # Light Green
+        "Third Most Recent": "#006400"   # Light Green
     }
 
     for label, color in colors.items():
-        recent_data = plot_df[plot_df["Recency"] == label]
+
+        recent_data = plot_df[
+            plot_df["Recency"] == label
+        ]
 
         fig.add_scatter(
             x=recent_data["dive_number"],
@@ -291,8 +294,24 @@ def render_dive_score_distribution_page(supabase):
             marker=dict(
                 color=color,
                 size=10,
-                line=dict(color="black", width=1)
-            )
+                line=dict(
+                    color="black",
+                    width=1
+                )
+            ),
+            customdata=recent_data[
+                [
+                    "meet",
+                    "date",
+                    "score"
+                ]
+            ],
+            hovertemplate=
+            "<b>Dive %{x}</b><br>"
+            "Score: %{y:.2f}<br>"
+            "Meet: %{customdata[0]}<br>"
+            "Date: %{customdata[1]|%Y-%m-%d}<br>"
+            "<extra></extra>"
         )
 
     fig.update_layout(
