@@ -292,6 +292,15 @@ def assign_points(rank_df, metric):
 def render_power_rankings_page(supabase):
     
     st.header("Power Rankings")
+    st.write(
+        """
+        While these Power Rankings are the core basis for Sectional Team Decisons they do not take in account Attendance, Trends, Behaviors, and Attitudes. Thus the coaching staff has complete discretion when choosing Sectional Divers regardless of the Power Rankings.
+
+        The Power Rankings find your best 11 dives by category & type, use those to form a 11-Dive Projection, and your best score from an 11-Dive meet. Divers are then awarded points based off their relative ranking within each of those 13 metric with the top score in each metric receiving 50 points, second receiving 49, and so on with divers without a valid score in a metric receiving 0. All of those points are added up to compute the Power Points and Power Rankings.
+
+        The basis for this calculation is using the data from the current diving season to find the divers with the GREATEST SCORING POTENTIAL to advance to the sectional meet.
+        """
+    )
 
     df = build_results_dataframe(supabase)
 
