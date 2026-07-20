@@ -2,6 +2,7 @@ import io
 import re
 import pandas as pd
 import streamlit as st
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -408,14 +409,86 @@ def render_power_rankings_page(supabase):
             "Power Ranking",
             "Diver",
             "Power Points",
-            *METRICS
+            *point_cols
         ]
 
-        st.dataframe(
-            rankings[detailed_cols],
-            use_container_width=True,
-            hide_index=True
+                
+        metric_map = {
+            "Front Vol Pts": ("Front Vol Dive", "Front Vol Meet", "Front Vol"),
+            "Front Opt Pts": ("Front Opt Dive", "Front Opt Meet", "Front Opt"),
+            "Back Vol Pts": ("Back Vol Dive", "Back Vol Meet", "Back Vol"),
+            "Back Opt Pts": ("Back Opt Dive", "Back Opt Meet", "Back Opt"),
+            "Rev Vol Pts": ("Rev Vol Dive", "Rev Vol Meet", "Rev Vol"),
+            "Rev Opt Pts": ("Rev Opt Dive", "Rev Opt Meet", "Rev Opt"),
+            "Inw Vol Pts": ("Inw Vol Dive", "Inw Vol Meet", "Inw Vol"),
+            "Inw Opt Pts": ("Inw Opt Dive", "Inw Opt Meet", "Inw Opt"),
+            "Tw Vol Pts": ("Tw Vol Dive", "Tw Vol Meet", "Tw Vol"),
+            "Tw Opt Pts": ("Tw Opt Dive", "Tw Opt Meet", "Tw Opt"),
+            "11th Dive Pts": (
+                "11th Dive Dive",
+                "11th Dive Meet",
+                "11th Dive"
+            ),
+        }
+
+        grid_df = rankings[detailed_cols].copy()
+
+        for pts_col, (dive_col, meet_col, score_col) in metric_map.items():
+
+            grid_df[f"{pts_col}_tooltip"] = rankings.apply(
+                lambda r:
+                    f"{r['Diver']}\n"
+                    f"Dive: {r.get(dive_col,'')}\n"
+                    f"Meet: {r.get(meet_col,'')}\n"
+                    f"Score: {r.get(score_col,0):.2f}",
+                axis=1
+            )
+
+        gb = GridOptionsBuilder.from_dataframe(grid_df)
+
+        for pts_col in metric_map.keys():
+            gb.configure_column(
+                pts_col,
+                tooltipField=f"{pts_col}_tooltip"
+            )
+
+        for col in [c for c in grid_df.columns if c.endswith("_tooltip")]:
+            gb.configure_column(col, hide=True)
+
+
+        max_name_len = int(
+            grid_df["Diver"].astype(str).str.len().max()
         )
+
+        diver_width = int(max(100, max_name_len * 10))
+
+
+        gb.configure_column(
+            field="Diver",
+            width=diver_width,
+            minWidth=diver_width,
+        )
+
+
+        gb.configure_grid_options(
+            defaultColDef={
+                "wrapHeaderText": True,
+                "autoHeaderHeight": True,
+                "resizable": True,
+                "width": 70,
+            }
+        )
+
+
+        grid_options=gb.build()
+        grid_options["enableBrowserTooltips"] = True
+
+        AgGrid(
+            grid_df,
+            gridOptions=grid_options,
+            fit_columns_on_grid_load=False,
+        )
+
 
     # -------------------------
     # CSV MEDIUM
@@ -424,8 +497,8 @@ def render_power_rankings_page(supabase):
     export_cols = [
         "Power Ranking",
         "Diver",
-        *point_cols,
-        "Power Points"
+        "Power Points",
+        *point_cols
     ]
 
     csv_medium = rankings[export_cols].to_csv(
@@ -500,40 +573,41 @@ def render_power_rankings_page(supabase):
     # -------------------------
     # PDF MEDIUM
     # -------------------------
+    if 1==2:
+            
+        medium_buffer = io.BytesIO()
 
-    medium_buffer = io.BytesIO()
-
-    doc = SimpleDocTemplate(
-        medium_buffer,
-        pagesize=pagesizes.landscape(
-            pagesizes.letter
+        doc = SimpleDocTemplate(
+            medium_buffer,
+            pagesize=pagesizes.landscape(
+                pagesizes.letter
+            )
         )
-    )
 
-    pdf_table = [export_cols]
+        pdf_table = [export_cols]
 
-    for _, row in rankings.iterrows():
+        for _, row in rankings.iterrows():
 
-        pdf_table.append([
-            row[col]
-            for col in export_cols
-        ])
+            pdf_table.append([
+                row[col]
+                for col in export_cols
+            ])
 
-    tbl = Table(pdf_table)
+        tbl = Table(pdf_table)
 
-    tbl.setStyle(
-        TableStyle([
-            ("GRID", (0,0), (-1,-1), 1, colors.black),
-            ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
-            ("FONTSIZE", (0,0), (-1,-1), 7)
-        ])
-    )
+        tbl.setStyle(
+            TableStyle([
+                ("GRID", (0,0), (-1,-1), 1, colors.black),
+                ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
+                ("FONTSIZE", (0,0), (-1,-1), 7)
+            ])
+        )
 
-    doc.build([tbl])
+        doc.build([tbl])
 
-    st.download_button(
-        "PDF - Medium",
-        medium_buffer.getvalue(),
-        file_name=f"power_rankings_medium_{year}_{season}.pdf",
-        mime="application/pdf"
-    )
+        st.download_button(
+            "PDF - Medium",
+            medium_buffer.getvalue(),
+            file_name=f"power_rankings_medium_{year}_{season}.pdf",
+            mime="application/pdf"
+        )
