@@ -83,7 +83,7 @@ def authenticate_user(email, password):
     user = response.data[0]
 
     if not check_password_hash(
-        user["password_hash"],
+        user["password"],
         password
     ):
         st.error("Invalid email or password.")
@@ -195,91 +195,106 @@ if not st.session_state.authenticated:
     # CREATE ACCOUNT
     # --------------------------
 
-    with tab2:
+    # --------------------------
+# CREATE ACCOUNT
+# --------------------------
 
-        st.header("Create Account")
+with tab2:
 
-        st.text_input(
-            "First Name",
-            key="create_first_name"
+    st.header("Create Account")
+
+    with st.form("create_account_form"):
+
+        first_name = st.text_input(
+            "First Name"
         )
 
-        st.text_input(
-            "Last Name",
-            key="create_last_name"
+        last_name = st.text_input(
+            "Last Name"
         )
 
-        st.text_input(
-            "Email Address",
-            key="create_email"
+        email = st.text_input(
+            "Email Address"
         )
 
-        st.text_input(
+        password = st.text_input(
             "Password",
-            type="password",
-            key="create_password"
+            type="password"
         )
 
-        st.text_input(
+        confirm_password = st.text_input(
             "Confirm Password",
-            type="password",
-            key="create_confirm_password"
+            type="password"
         )
 
-        if st.button("Create Account"):
-            first_name = st.session_state.create_first_name
-            last_name = st.session_state.create_last_name
-            email = st.session_state.create_email
-            password = st.session_state.create_password
-            confirm_password = st.session_state.create_confirm_password
+        create_submit = st.form_submit_button(
+            "Create Account",
+            use_container_width=True
+        )
 
-            if not first_name.strip():
-                st.error("First name is required.")
+    if create_submit:
 
-            elif not last_name.strip():
-                st.error("Last name is required.")
+        first_name = first_name.strip()
+        last_name = last_name.strip()
+        email = email.strip().lower()
 
-            elif not email.strip():
-                st.error("Email is required.")
+        if not first_name:
+            st.error("First name is required.")
 
-            elif not password:
-                st.error("Password is required.")
+        elif not last_name:
+            st.error("Last name is required.")
 
-            elif not confirm_password:
-                st.error("Please confirm your password.")
+        elif not email:
+            st.error("Email is required.")
 
-            elif password != confirm_password:
-                st.error("Passwords do not match.")
+        elif not password:
+            st.error("Password is required.")
+
+        elif not confirm_password:
+            st.error("Please confirm your password.")
+
+        elif password != confirm_password:
+            st.error("Passwords do not match.")
+
+        else:
+
+            existing_user = (
+                supabase.table("users")
+                .select("email")
+                .eq("email", email)
+                .execute()
+            )
+
+            if existing_user.data:
+
+                st.error("Account already exists.")
 
             else:
 
-                existing_user = (
+                (
                     supabase.table("users")
-                    .select("email")
-                    .eq("email", email.lower().strip())
+                    .insert(
+                        {
+                            "email": email,
+                            "first_name": first_name.title(),
+                            "last_name": last_name.title(),
+
+                            # IMPORTANT
+                            "password": generate_password_hash(
+                                password
+                            ),
+
+                            "is_admin": False,
+                            "is_approved": False,
+                        }
+                    )
                     .execute()
                 )
 
-                if existing_user.data:
-                    st.error("Account already exists.")
-
-                else:
-                    (
-                        supabase.table("users")
-                        .insert({
-                            "email": email.lower().strip(),
-                            "first_name": first_name.title(),
-                            "last_name": last_name.title(),
-                            "password": generate_password_hash(password),
-                            "is_admin": False,
-                            "is_approved": False
-                        })
-                        .execute()
-                    )
-
-                    st.success(
-                        "Account created. Awaiting administrator approval."
-                    )
+                st.success(
+                    "Account created successfully. "
+                    "Awaiting administrator approval."
+                )
 
     st.stop()
 
