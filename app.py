@@ -311,33 +311,33 @@ with st.sidebar:
         st.rerun()
 
 
-with st.sidebar:
-    st.title("Navigation")
+if "page" not in st.session_state:
+    st.session_state.page = "Power Rankings"
 
-    page = None
+with st.sidebar:
 
     with st.expander("📊 Analytics", expanded=True):
         if st.button("Top Scores"):
-            page = "Top Scores"
+            st.session_state.page = "Top Scores"
+
         if st.button("Score Progression"):
-            page = "Score Progression"
+            st.session_state.page = "Score Progression"
+
         if st.button("Power Rankings"):
-            page = "Power Rankings"
+            st.session_state.page = "Power Rankings"
+
         if st.button("Dive Analysis"):
-            page = "Dive Analysis"
+            st.session_state.page = "Dive Analysis"
 
     if st.session_state.is_admin:
         with st.expander("⚙️ Administration"):
             if st.button("Approve Users"):
-                page = "Approve Users"
+                st.session_state.page = "Approve Users"
+
             if st.button("Add Diver"):
-                page = "Add Diver"
-            if st.button("Add Meet"):
-                page = "Add Meet"
-            if st.button("Add Results"):
-                page = "Add Results"
-            if st.button("View/Edit Results"):
-                page = "View/Edit Results"
+                st.session_state.page = "Add Diver"
+
+page = st.session_state.page
 
 
 # =====================================================
