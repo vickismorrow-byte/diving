@@ -21,6 +21,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 from power_rankings import render_power_rankings_page
 from score_progression import render_score_progression_page
+from edit_results import render_edit_results_page
 
 # =====================================================
 # PAGE CONFIG
@@ -312,6 +313,7 @@ if st.session_state.is_admin:
         "Add Diver",
         "Add Meet",
         "Add Results",
+        "View/Edit Results",
         "Top Scores",
         "Score Progression",
         "Power Rankings"
@@ -1141,3 +1143,6 @@ if page == "Approve Users":
                 )
 
                 st.rerun()
+
+elif page == "View/Edit Results":
+    render_edit_results_page(supabase)
