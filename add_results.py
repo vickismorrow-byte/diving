@@ -5,7 +5,7 @@ import streamlit as st
 from datetime import date
 
 @st.cache_data(ttl=60)
-def get_divers(supabase):
+def get_divers(_supabase):
     response = (
         supabase.table("divers")
         .select("diver")
@@ -16,7 +16,7 @@ def get_divers(supabase):
 
 
 @st.cache_data(ttl=60)
-def get_meets(supabase):
+def get_meets(_supabase):
     response = (
         supabase.table("meets")
         .select("meet")
@@ -27,7 +27,7 @@ def get_meets(supabase):
 
 
 @st.cache_data(ttl=60)
-def get_dives(supabase):
+def get_dives(_supabase):
     response = (
         supabase.table("dives")
         .select("dive_number, dd")
