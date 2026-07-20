@@ -223,60 +223,53 @@ if not st.session_state.authenticated:
 
         if st.button("Create Account"):
 
-            if password != confirm_password:
+            if not first_name.strip():
+                st.error("First name is required.")
 
-                st.error(
-                    "Passwords do not match."
-                )
+            elif not last_name.strip():
+                st.error("Last name is required.")
+
+            elif not email.strip():
+                st.error("Email is required.")
+
+            elif not password:
+                st.error("Password is required.")
+
+            elif not confirm_password:
+                st.error("Please confirm your password.")
+
+            elif password != confirm_password:
+                st.error("Passwords do not match.")
 
             else:
-
-                existing_user = (
+                (
                     supabase.table("users")
-                    .select("email")
-                    .eq(
-                        "email",
-                        email.lower().strip()
-                    )
+                    .insert({
+                        "email":
+                            email.lower().strip(),
+
+                        "first_name":
+                            first_name.title(),
+
+                        "last_name":
+                            last_name.title(),
+
+                        "password_hash":
+                            generate_password_hash(
+                                password
+                            ),
+
+                        "is_admin": False,
+                        "is_approved": False
+                    })
                     .execute()
                 )
 
-                if existing_user.data:
-
-                    st.error(
-                        "Account already exists."
-                    )
-
-                else:
-
-                    (
-                        supabase.table("users")
-                        .insert({
-                            "email":
-                                email.lower().strip(),
-
-                            "first_name":
-                                first_name.title(),
-
-                            "last_name":
-                                last_name.title(),
-
-                            "password_hash":
-                                generate_password_hash(
-                                    password
-                                ),
-
-                            "is_admin": False,
-                            "is_approved": False
-                        })
-                        .execute()
-                    )
-
-                    st.success(
-                        "Account created. "
-                        "An administrator must approve "
-                        "your account before you can log in."
-                    )
+                st.success(
+                    "Account created. "
+                    "An administrator must approve "
+                    "your account before you can log in."
+                )
 
     st.stop()
 
