@@ -2,6 +2,7 @@ import io
 import re
 import pandas as pd
 import streamlit as st
+from datetime import date
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 from reportlab.platypus import (
@@ -300,14 +301,42 @@ def render_power_rankings_page(supabase):
 
     years = sorted(df["Year"].dropna().unique())
 
+    today = date.today()
+
+    # Year default:
+    # Jan 1 - Nov 14  -> current year
+    # Nov 15 - Dec 31 -> current year + 1
+    default_year = (
+        str(today.year)
+        if today < date(today.year, 11, 15)
+        else str(today.year + 1)
+    )
+
+    year_index = (
+        years.index(default_year)
+        if default_year in years
+        else max(0, len(years) - 1)
+    )
+
     year = st.selectbox(
         "Year",
-        years
+        years,
+        index=year_index
+    )
+
+    # Season default:
+    # Jul 1 - Nov 14 -> Girls
+    # Otherwise -> Boys
+    default_season = (
+        "Girls"
+        if date(today.year, 7, 1) <= today < date(today.year, 11, 15)
+        else "Boys"
     )
 
     season = st.selectbox(
         "Season",
-        ["Girls", "Boys"]
+        ["Girls", "Boys"],
+        index=["Girls", "Boys"].index(default_season)
     )
 
     filtered = df[
