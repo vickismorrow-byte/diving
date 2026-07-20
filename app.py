@@ -23,6 +23,7 @@ from power_rankings import render_power_rankings_page
 from score_progression import render_score_progression_page
 from edit_results import render_edit_results_page
 from boxplots import render_dive_score_distribution_page
+from add_results import render_add_results_page
 
 # =====================================================
 # PAGE CONFIG
@@ -334,8 +335,14 @@ with st.sidebar:
             if st.button("Approve Users"):
                 st.session_state.page = "Approve Users"
 
+            if st.button("Add Meet"):
+                st.session_state.page = "Add Meet"
             if st.button("Add Diver"):
                 st.session_state.page = "Add Diver"
+            if st.button("Add Results"):
+                st.session_state.page = "Add Results"
+            if st.button("View/Edit Results"):
+                st.session_state.page = "View/Edit Results"
 
 page = st.session_state.page
 
@@ -495,175 +502,10 @@ elif page == "Add Results":
         st.error("Admin access required")
         st.stop()
 
-    st.title("Add Results")
+    render_add_results_page(supabase)
 
-    try:
 
-        meets = [
-            m["meet"]
-            for m in get_meets()
-        ]
-
-        divers = [
-            d["diver"]
-            for d in get_divers()
-        ]
-
-        dives = get_dives()
-
-        dive_numbers = [
-            d["dive_number"]
-            for d in dives
-        ]
-
-        dd_lookup = build_dd_lookup()
-
-        if not meets:
-            st.warning(
-                "No meets found. Add a meet first."
-            )
-            st.stop()
-
-        if not divers:
-            st.warning(
-                "No divers found. Add a diver first."
-            )
-            st.stop()
-
-        selected_meet = st.selectbox(
-            "Meet",
-            meets
-        )
-
-        selected_diver = st.selectbox(
-            "Diver",
-            divers
-        )
-
-        dive_count = st.radio(
-            "Number of Dives",
-            [6, 11],
-            horizontal=True
-        )
-
-        default_df = pd.DataFrame(
-            {
-                "Dive Number": [None] * dive_count,
-                "Type": ["O"] * dive_count,
-                "Award": [None] * dive_count,
-                "Score": [None] * dive_count
-            }
-        )
-
-        edited_df = st.data_editor(
-            default_df,
-            hide_index=True,
-            num_rows="fixed",
-            use_container_width=True,
-            column_config={
-                "Dive Number": st.column_config.SelectboxColumn(
-                    "Dive Number",
-                    options=dive_numbers,
-                    required=True
-                ),
-                "Type": st.column_config.SelectboxColumn(
-                    "Type",
-                    options=["V", "O"],
-                    required=True
-                ),
-                "Award": st.column_config.NumberColumn(
-                    "Award",
-                    min_value=0.00,
-                    max_value=999.99,
-                    step=0.01,
-                    format="%.2f"
-                ),
-                "Score": st.column_config.NumberColumn(
-                    "Score",
-                    min_value=0.00,
-                    max_value=999.99,
-                    step=0.01,
-                    format="%.2f"
-                )
-            }
-        )
-
-        if st.button(
-            "Submit Results",
-            type="primary",
-            use_container_width=True
-        ):
-
-            rows_to_insert = []
-
-            for idx, row in edited_df.iterrows():
-
-                dive_number = row["Dive Number"]
-                dive_type = row["Type"]
-
-                award = row["Award"]
-                score = row["Score"]
-
-                if pd.isna(dive_number):
-                    raise ValueError(
-                        f"Row {idx + 1}: Dive Number required."
-                    )
-
-                award_exists = pd.notna(award)
-                score_exists = pd.notna(score)
-
-                if award_exists and score_exists:
-                    raise ValueError(
-                        f"Row {idx + 1}: Enter Award OR Score, not both."
-                    )
-
-                if not award_exists and not score_exists:
-                    raise ValueError(
-                        f"Row {idx + 1}: Enter Award OR Score."
-                    )
-
-                if score_exists:
-
-                    dd = dd_lookup.get(dive_number)
-
-                    if not dd:
-                        raise ValueError(
-                            f"Row {idx + 1}: No DD found for dive."
-                        )
-
-                    award = round(
-                        float(score) / float(dd),
-                        2
-                    )
-
-                award = round(float(award), 2)
-
-                rows_to_insert.append(
-                    {
-                        "meet": selected_meet,
-                        "diver": selected_diver,
-                        "dive_number": dive_number,
-                        "type": dive_type,
-
-                        # ALWAYS STORE AWARD
-                        "award": award,
-
-                        # placeholder; trigger recalculates
-                        "score": 0
-                    }
-                )
-
-            supabase.table("results").insert(
-                rows_to_insert
-            ).execute()
-
-            st.success(
-                f"Successfully inserted {len(rows_to_insert)} result records."
-            )
-
-    except Exception as e:
-        st.error(f"Unable to load results page: {e}")
-
+    
 # =====================================================
 # TOP SCORES
 # =====================================================
