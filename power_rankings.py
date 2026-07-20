@@ -414,10 +414,10 @@ def render_power_rankings_page(supabase):
 
                 
         metric_map = {
-            "F Vol": ("Front Vol Dive", "Front Vol Meet", "Front Vol"),
-            "F Opt": ("Front Opt Dive", "Front Opt Meet", "Front Opt"),
-            "B Vol Pts": ("Back Vol Dive", "Back Vol Meet", "Back Vol"),
-            "B Opt Pts": ("Back Opt Dive", "Back Opt Meet", "Back Opt"),
+            "Front Vol Pts": ("Front Vol Dive", "Front Vol Meet", "Front Vol"),
+            "Front Opt Pts": ("Front Opt Dive", "Front Opt Meet", "Front Opt"),
+            "Back Vol Pts": ("Back Vol Dive", "Back Vol Meet", "Back Vol"),
+            "Back Opt Pts": ("Back Opt Dive", "Back Opt Meet", "Back Opt"),
             "Rev Vol Pts": ("Rev Vol Dive", "Rev Vol Meet", "Rev Vol"),
             "Rev Opt Pts": ("Rev Opt Dive", "Rev Opt Meet", "Rev Opt"),
             "Inw Vol Pts": ("Inw Vol Dive", "Inw Vol Meet", "Inw Vol"),
