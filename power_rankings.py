@@ -459,7 +459,7 @@ def render_power_rankings_page(supabase):
             grid_df["Diver"].astype(str).str.len().max()
         )
 
-        diver_width = int(max(150, max_name_len * 10))
+        diver_width = int(max(120, max_name_len * 10))
 
 
         gb.configure_column(
@@ -474,7 +474,7 @@ def render_power_rankings_page(supabase):
                 "wrapHeaderText": True,
                 "autoHeaderHeight": True,
                 "resizable": True,
-                "width": 50,
+                "width": 65,
             }
         )
 
