@@ -6,102 +6,117 @@ def render_edit_results_page(supabase):
     st.title("View & Edit Diver Results")
 
     # ---------------------------------
-    # Load dropdown values
+    # Load data for dynamic filters
     # ---------------------------------
-    divers_resp = (
+    results_rows = (
         supabase.table("results")
-        .select("diver")
-        .order("diver")
+        .select("entryid, diver, meet")
         .execute()
+        .data
     )
 
-    divers = sorted(
-        list(
-            {
-                row["diver"]
-                for row in divers_resp.data
-                if row.get("diver")
-            }
-        )
+    divers_rows = (
+        supabase.table("divers")
+        .select("diver, season")
+        .execute()
+        .data
     )
+
+    meets_rows = (
+        supabase.table("meets")
+        .select("meet, season, date")
+        .execute()
+        .data
+    )
+
+    diver_season = {
+        d["diver"]: d["season"]
+        for d in divers_rows
+    }
+
+    meet_lookup = {
+        m["meet"]: m
+        for m in meets_rows
+    }
 
     # ---------------------------------
-    # Optional Filters
+    # Dynamic Filters
     # ---------------------------------
     col1, col2 = st.columns(2)
 
     with col1:
-        year_filter = st.selectbox(
-            "Year (Optional)",
-            ["All"] + sorted(
-                list(
-                    {
-                        r["meet"][:4]
-                        for r in divers_resp.data
-                        if r.get("meet") and len(r["meet"]) >= 4
-                    }
-                ),
-                reverse=True,
-            ),
+        season_filter = st.selectbox(
+            "Season",
+            ["All", "Boys", "Girls"],
         )
+
+    filtered_rows = results_rows.copy()
+
+    # Filter by Boys/Girls
+    if season_filter != "All":
+        filtered_rows = [
+            r
+            for r in filtered_rows
+            if diver_season.get(r["diver"]) == season_filter
+        ]
+
+    # Build available years after season filter
+    years = sorted(
+        {
+            r["meet"][:4]
+            for r in filtered_rows
+            if r.get("meet") and len(r["meet"]) >= 4
+        },
+        reverse=True,
+    )
 
     with col2:
-        season_filter = st.selectbox(
-            "Season (Optional)",
-            ["All", "Girls", "Boys"],
+        year_filter = st.selectbox(
+            "Year",
+            ["All"] + years,
         )
 
+    # Filter by year
+    if year_filter != "All":
+        filtered_rows = [
+            r
+            for r in filtered_rows
+            if r.get("meet", "").startswith(year_filter)
+        ]
+
     # ---------------------------------
-    # Required Diver Filter
+    # Dynamic Diver List
     # ---------------------------------
+    available_divers = sorted(
+        {
+            r["diver"]
+            for r in filtered_rows
+            if r.get("diver")
+        }
+    )
+
     selected_diver = st.selectbox(
         "Diver *",
-        ["Select Diver"] + divers,
+        ["Select Diver"] + available_divers,
     )
 
     if selected_diver == "Select Diver":
         return
 
-    meet_query = (
-        supabase.table("results")
-        .select("*")
-        .eq("diver", selected_diver)
+    # ---------------------------------
+    # Dynamic Meet List
+    # ---------------------------------
+    available_meets = sorted(
+        {
+            r["meet"]
+            for r in filtered_rows
+            if r["diver"] == selected_diver
+        }
     )
 
-    meet_rows = meet_query.execute().data
-
-    if year_filter != "All":
-        meet_rows = [
-            r
-            for r in meet_rows
-            if r.get("meet", "").startswith(year_filter)
-        ]
-
-    if season_filter != "All":
-        season_code = "G" if season_filter == "Girls" else "B"
-
-        meet_rows = [
-            r
-            for r in meet_rows
-            if f"_{season_code}_" in r.get("meet", "")
-        ]
-
-    meets = sorted(
-        list(
-            {
-                r["meet"]
-                for r in meet_rows
-                if r.get("meet")
-            }
-        )
-    )
-
-    # ---------------------------------
-    # Required Meet Filter
-    # ---------------------------------
     selected_meet = st.selectbox(
         "Meet *",
-        ["Select Meet"] + meets,
+        ["Select Meet"] + available_meets,
     )
 
     if selected_meet == "Select Meet":
@@ -141,12 +156,12 @@ def render_edit_results_page(supabase):
             for _, row in edited_df.iterrows():
                 record = row.to_dict()
 
-                result_id = record.pop("id")
+                entryid = record.pop("entryid")
 
                 (
                     supabase.table("results")
                     .update(record)
-                    .eq("id", result_id)
+                    .eq("entryid", entryid)
                     .execute()
                 )
 
