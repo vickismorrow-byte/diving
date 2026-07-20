@@ -411,14 +411,7 @@ def render_power_rankings_page(supabase):
             *point_cols
         ]
 
-        detailed_df = rankings[detailed_cols].copy()
-
-        tooltips = pd.DataFrame(
-            "",
-            index=detailed_df.index,
-            columns=detailed_df.columns
-        )
-
+                
         metric_map = {
             "Front Vol Pts": ("Front Vol Dive", "Front Vol Meet", "Front Vol"),
             "Front Opt Pts": ("Front Opt Dive", "Front Opt Meet", "Front Opt"),
@@ -437,26 +430,37 @@ def render_power_rankings_page(supabase):
             ),
         }
 
+        tooltip_df = pd.DataFrame(
+            "",
+            index=rankings.index,
+            columns=detailed_cols
+        )
+
         for pts_col, (dive_col, meet_col, score_col) in metric_map.items():
-            if pts_col not in tooltips.columns:
+            if pts_col not in tooltip_df.columns:
                 continue
 
-            tooltips[pts_col] = rankings.apply(
+            tooltip_df[pts_col] = rankings.apply(
                 lambda r: (
-                    f"Dive: {r.get(dive_col, '')}\n"
-                    f"Meet: {r.get(meet_col, '')}\n"
+                    f"Dive: {r.get(dive_col, 'N/A')}\n"
+                    f"Meet: {r.get(meet_col, 'N/A')}\n"
                     f"Score: {r.get(score_col, 0):.2f}"
                 ),
-                axis=1,
+                axis=1
             )
 
-        styled_df = detailed_df.style.set_tooltips(tooltips)
+        styled = (
+            rankings[detailed_cols]
+            .style
+            .set_tooltips(tooltip_df)
+        )
 
         st.dataframe(
-            styled_df,
+            styled,
             use_container_width=True,
             hide_index=True
         )
+
 
     # -------------------------
     # CSV MEDIUM
