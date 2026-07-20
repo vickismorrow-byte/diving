@@ -296,33 +296,6 @@ if not st.session_state.authenticated:
 
 with st.sidebar:
 
-    """
-    if not st.session_state.is_admin:
-
-        st.subheader("Admin Login")
-
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
-
-        if st.button("Login"):
-            user = authenticate_user(email, password)
-
-            if user:
-                st.session_state.is_admin = user["is_admin"]
-                st.session_state.user_email = user["email"]
-                st.rerun()
-            else:
-                st.error("Invalid credentials")
-
-    else:
-        st.success(f"Logged in as {st.session_state.user_email}")
-
-        if st.button("Logout"):
-            st.session_state.is_admin = False
-            st.session_state.user_email = None
-            st.rerun()
-    """
-
     if st.button("Logout"):
 
         st.session_state.authenticated = False
