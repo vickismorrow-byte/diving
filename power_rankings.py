@@ -457,10 +457,15 @@ def render_power_rankings_page(supabase):
         grid_options=gb.build()
         grid_options["enableBrowserTooltips"] = True
 
-        
-        grid_options["autoSizeStrategy"] = {
-            "type": "fitCellContents"
-        }
+        max_name_len = grid_df["Diver"].astype(str).str.len().max()
+
+        diver_width = max(150, max_name_len * 10)
+
+        gb.configure_column(
+            field="Diver",
+            width=diver_width,
+            pinned="left",
+        )
 
 
         gb.configure_grid_options(
@@ -474,7 +479,7 @@ def render_power_rankings_page(supabase):
         AgGrid(
             grid_df,
             gridOptions=grid_options,
-            fit_columns_on_grid_load=False,
+            fit_columns_on_grid_load=True,
         )
 
 
