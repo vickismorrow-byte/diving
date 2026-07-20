@@ -474,7 +474,7 @@ def render_power_rankings_page(supabase):
         AgGrid(
             grid_df,
             gridOptions=grid_options,
-            fit_columns_on_grid_load=True,
+            fit_columns_on_grid_load=False,
         )
 
 
