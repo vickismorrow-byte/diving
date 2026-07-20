@@ -292,8 +292,9 @@ def assign_points(rank_df, metric):
 def render_power_rankings_page(supabase):
     
     st.header("Power Rankings")
+    st.divider()
     st.markdown("""
-        ### Power Rankings Disclaimer & Methodology
+        #### Power Rankings Disclaimer & Methodology
 
         While these Power Rankings serve as the primary foundation for Sectional Team selections, they do not account for factors such as attendance, performance trends, behavior, attitude, or other coaching considerations. Therefore, the coaching staff retains full discretion in selecting sectional qualifiers, regardless of a diver’s position in the Power Rankings.
 
@@ -307,6 +308,7 @@ def render_power_rankings_page(supabase):
 
         The purpose of this system is to use current-season performance data to identify the divers with the **greatest scoring potential** and the strongest likelihood of advancing at the sectional level.
         """)
+    st.divider()
 
     df = build_results_dataframe(supabase)
 
