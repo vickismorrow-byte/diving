@@ -408,7 +408,7 @@ def render_power_rankings_page(supabase):
             "Power Ranking",
             "Diver",
             "Power Points",
-            *METRICS
+            *point_cols
         ]
 
         st.dataframe(
@@ -424,8 +424,8 @@ def render_power_rankings_page(supabase):
     export_cols = [
         "Power Ranking",
         "Diver",
-        *point_cols,
-        "Power Points"
+        "Power Points",
+        *point_cols
     ]
 
     csv_medium = rankings[export_cols].to_csv(
@@ -500,40 +500,41 @@ def render_power_rankings_page(supabase):
     # -------------------------
     # PDF MEDIUM
     # -------------------------
+    if 1==2:
+            
+        medium_buffer = io.BytesIO()
 
-    medium_buffer = io.BytesIO()
-
-    doc = SimpleDocTemplate(
-        medium_buffer,
-        pagesize=pagesizes.landscape(
-            pagesizes.letter
+        doc = SimpleDocTemplate(
+            medium_buffer,
+            pagesize=pagesizes.landscape(
+                pagesizes.letter
+            )
         )
-    )
 
-    pdf_table = [export_cols]
+        pdf_table = [export_cols]
 
-    for _, row in rankings.iterrows():
+        for _, row in rankings.iterrows():
 
-        pdf_table.append([
-            row[col]
-            for col in export_cols
-        ])
+            pdf_table.append([
+                row[col]
+                for col in export_cols
+            ])
 
-    tbl = Table(pdf_table)
+        tbl = Table(pdf_table)
 
-    tbl.setStyle(
-        TableStyle([
-            ("GRID", (0,0), (-1,-1), 1, colors.black),
-            ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
-            ("FONTSIZE", (0,0), (-1,-1), 7)
-        ])
-    )
+        tbl.setStyle(
+            TableStyle([
+                ("GRID", (0,0), (-1,-1), 1, colors.black),
+                ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
+                ("FONTSIZE", (0,0), (-1,-1), 7)
+            ])
+        )
 
-    doc.build([tbl])
+        doc.build([tbl])
 
-    st.download_button(
-        "PDF - Medium",
-        medium_buffer.getvalue(),
-        file_name=f"power_rankings_medium_{year}_{season}.pdf",
-        mime="application/pdf"
-    )
+        st.download_button(
+            "PDF - Medium",
+            medium_buffer.getvalue(),
+            file_name=f"power_rankings_medium_{year}_{season}.pdf",
+            mime="application/pdf"
+        )
