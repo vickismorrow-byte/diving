@@ -454,8 +454,8 @@ def render_power_rankings_page(supabase):
         for col in [c for c in grid_df.columns if c.endswith("_tooltip")]:
             gb.configure_column(col, hide=True)
 
-        grid_options=gb.build(),
-        grid_options["enableBrowserTooltips"] = True,
+        grid_options=gb.build()
+        grid_options["enableBrowserTooltips"] = True
 
         AgGrid(
             grid_df,
