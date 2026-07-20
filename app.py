@@ -29,8 +29,8 @@ from boxplots import render_dive_score_distribution_page
 # =====================================================
 
 st.set_page_config(
-    page_title="Diving Database",
-    page_icon="🏊",
+    page_title="Huskie Analytics",
+    page_icon="📊",
     layout="wide"
 )
 

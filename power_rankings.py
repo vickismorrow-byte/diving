@@ -428,12 +428,12 @@ def render_power_rankings_page(supabase):
     ]
 
 
-    col1, col2 = st.columns([3,2])
+    col1, col2, col3 = st.columns([3,3,1])
     
     with col1:
         st.subheader("🏆 Power Rankings")
 
-    with col2:
+    with col3:
         show_metrics = st.checkbox(
             "Show Detailed Metrics"
         )
