@@ -465,6 +465,15 @@ def render_power_rankings_page(supabase):
             }
         )
 
+    
+        max_name_len = grid_df["Diver"].astype(str).str.len().max()
+
+        gb.configure_column(
+            "Diver",
+            width=max(150, max_name_len * 9),
+            pinned="left",
+        )
+
         AgGrid(
             grid_df,
             gridOptions=grid_options,
