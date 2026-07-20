@@ -7,7 +7,7 @@ from datetime import date
 @st.cache_data(ttl=60)
 def get_divers(_supabase):
     response = (
-        supabase.table("divers")
+        _supabase.table("divers")
         .select("diver")
         .order("diver")
         .execute()
@@ -18,7 +18,7 @@ def get_divers(_supabase):
 @st.cache_data(ttl=60)
 def get_meets(_supabase):
     response = (
-        supabase.table("meets")
+        _supabase.table("meets")
         .select("meet")
         .order("meet")
         .execute()
@@ -29,7 +29,7 @@ def get_meets(_supabase):
 @st.cache_data(ttl=60)
 def get_dives(_supabase):
     response = (
-        supabase.table("dives")
+        _supabase.table("dives")
         .select("dive_number, dd")
         .order("dive_number")
         .execute()
