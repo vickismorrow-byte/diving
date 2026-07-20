@@ -138,6 +138,7 @@ def render_edit_results_page(supabase):
         return
 
     df = pd.DataFrame(results_resp.data)
+    df = df.sort_values("entryid").reset_index(drop=True)
 
     st.subheader("Current Results")
 
@@ -145,8 +146,10 @@ def render_edit_results_page(supabase):
         df,
         use_container_width=True,
         num_rows="fixed",
+        disabled=["entryid", "meet", "diver", "score"],
         key="edit_results_table",
     )
+
 
     # ---------------------------------
     # Save Changes
@@ -169,3 +172,37 @@ def render_edit_results_page(supabase):
 
         except Exception as ex:
             st.error(f"Update failed: {ex}")
+    
+    st.divider()
+
+    st.subheader("Delete Results Sheet")
+    st.warning(
+        "This will permanently delete all results for the selected diver and meet."
+    )
+
+    confirm_1 = st.checkbox(
+        "I understand this action cannot be undone"
+    )
+
+    confirm_2 = st.checkbox(
+        "Yes, delete this entire results sheet"
+    )
+
+    if st.button("Delete Sheet"):
+        if not (confirm_1 and confirm_2):
+            st.error("Both confirmations are required.")
+        else:
+            try:
+                (
+                    supabase.table("results")
+                    .delete()
+                    .eq("diver", selected_diver)
+                    .eq("meet", selected_meet)
+                    .execute()
+                )
+
+                st.success("Results sheet deleted successfully.")
+                st.rerun()
+
+            except Exception as ex:
+                st.error(f"Delete failed: {ex}")
