@@ -413,12 +413,12 @@ def render_power_rankings_page(supabase):
     rankings.loc[
         rankings["Power Ranking"].isin([1, 2]),
         "Designation"
-    ] = "🏅 Tentative Sectional Diver"
+    ] = "Tentative Sectional Diver"
 
     rankings.loc[
         rankings["Power Ranking"] == 3,
         "Designation"
-    ] = "🥉 Tentative Sectional Alternate"
+    ] = "Tentative Sectional Alternate"
 
     display_cols = [
         "Power Ranking",
