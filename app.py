@@ -335,7 +335,13 @@ with st.sidebar:
                 st.session_state.page = "Approve Users"
 
             if st.button("Add Diver"):
+                st.session_state.page = "Add Meet"
+            if st.button("Add Diver"):
                 st.session_state.page = "Add Diver"
+            if st.button("Add Diver"):
+                st.session_state.page = "Add Results"
+            if st.button("Add Diver"):
+                st.session_state.page = "View/Edit Results"
 
 page = st.session_state.page
 
