@@ -416,15 +416,15 @@ def render_power_rankings_page(supabase):
         metric_map = {
             "F Vol": ("Front Vol Dive", "Front Vol Meet", "Front Vol"),
             "F Opt": ("Front Opt Dive", "Front Opt Meet", "Front Opt"),
-            "B Vol": ("Back Vol Dive", "Back Vol Meet", "Back Vol"),
-            "B Opt": ("Back Opt Dive", "Back Opt Meet", "Back Opt"),
-            "R Vol": ("Rev Vol Dive", "Rev Vol Meet", "Rev Vol"),
-            "R Opt": ("Rev Opt Dive", "Rev Opt Meet", "Rev Opt"),
-            "I Vol": ("Inw Vol Dive", "Inw Vol Meet", "Inw Vol"),
-            "I Opt": ("Inw Opt Dive", "Inw Opt Meet", "Inw Opt"),
-            "T Vol": ("Tw Vol Dive", "Tw Vol Meet", "Tw Vol"),
-            "T Opt": ("Tw Opt Dive", "Tw Opt Meet", "Tw Opt"),
-            "11th Dive": (
+            "B Vol Pts": ("Back Vol Dive", "Back Vol Meet", "Back Vol"),
+            "B Opt Pts": ("Back Opt Dive", "Back Opt Meet", "Back Opt"),
+            "Rev Vol Pts": ("Rev Vol Dive", "Rev Vol Meet", "Rev Vol"),
+            "Rev Opt Pts": ("Rev Opt Dive", "Rev Opt Meet", "Rev Opt"),
+            "Inw Vol Pts": ("Inw Vol Dive", "Inw Vol Meet", "Inw Vol"),
+            "Inw Opt Pts": ("Inw Opt Dive", "Inw Opt Meet", "Inw Opt"),
+            "Tw Vol Pts": ("Tw Vol Dive", "Tw Vol Meet", "Tw Vol"),
+            "Tw Opt Pts": ("Tw Opt Dive", "Tw Opt Meet", "Tw Opt"),
+            "11th Dive Pts": (
                 "11th Dive Dive",
                 "11th Dive Meet",
                 "11th Dive"
