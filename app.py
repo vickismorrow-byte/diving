@@ -200,28 +200,37 @@ if not st.session_state.authenticated:
         st.header("Create Account")
 
         first_name = st.text_input(
-            "First Name"
+            "First Name",
+            key="create_first_name"
         )
 
         last_name = st.text_input(
-            "Last Name"
+            "Last Name",
+            key="create_last_name"
         )
 
         email = st.text_input(
-            "Email Address"
+            "Email Address",
+            key="create_email"
         )
 
         password = st.text_input(
             "Password",
-            type="password"
+            type="password",
+            key="create_password"
         )
 
         confirm_password = st.text_input(
             "Confirm Password",
-            type="password"
+            type="password",
+            key="create_confirm_password"
         )
 
         if st.button("Create Account"):
+            
+            st.write(
+                f"Password='{password}' | Confirm='{confirm_password}'"
+            )
 
             if not first_name.strip():
                 st.error("First name is required.")
@@ -254,7 +263,7 @@ if not st.session_state.authenticated:
                         "last_name":
                             last_name.title(),
 
-                        "password_hash":
+                        "password":
                             generate_password_hash(
                                 password
                             ),
