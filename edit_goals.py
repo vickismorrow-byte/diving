@@ -113,8 +113,8 @@ def render_edit_goals_page(supabase):
                 "goal_id",
                 "diver",
                 "goal_type",
-                "dive_number",
-                "score_goal",
+                "goal_dive_number",
+                "goal_score",
                 "date_added",
             ]
         )
@@ -141,12 +141,12 @@ def render_edit_goals_page(supabase):
                 options=GOAL_TYPES,
                 required=True,
             ),
-            "dive_number": st.column_config.SelectboxColumn(
+            "goal_dive_number": st.column_config.SelectboxColumn(
                 "Dive Number",
                 options=dive_numbers,
             ),
-            "score_goal": st.column_config.NumberColumn(
-                "Score Goal",
+            "goal_score": st.column_config.NumberColumn(
+                "Goal Score",
                 format="%.2f",
             ),
         },
@@ -189,16 +189,16 @@ if st.button(
             # Apply constraint rules
             if goal_type in DIVE_GOAL_TYPES:
 
-                record["score_goal"] = None
+                record["goal_score"] = None
 
-                if not record.get("dive_number"):
+                if not record.get("goal_dive_number"):
                     continue
 
             elif goal_type in SCORE_GOAL_TYPES:
 
                 record["dive_number"] = None
 
-                if record.get("score_goal") is None:
+                if record.get("goal_score") is None:
                     continue
 
             # UPDATE EXISTING
@@ -210,8 +210,8 @@ if st.button(
                 update_record = {
                     "diver": record["diver"],
                     "goal_type": record["goal_type"],
-                    "dive_number": record.get("dive_number"),
-                    "score_goal": record.get("score_goal"),
+                    "goal_dive_number": record.get("goal_dive_number"),
+                    "goal_score": record.get("goal_score"),
                 }
 
                 (
@@ -227,8 +227,8 @@ if st.button(
                 insert_record = {
                     "diver": record["diver"],
                     "goal_type": record["goal_type"],
-                    "dive_number": record.get("dive_number"),
-                    "score_goal": record.get("score_goal"),
+                    "goal_dive_number": record.get("goal_dive_number"),
+                    "goal_score": record.get("goal_score"),
                 }
 
                 (
