@@ -106,11 +106,11 @@ def render_view_goals_page(supabase):
 
                 record = match.iloc[0]
 
-                if pd.notna(record.get("score_goal")):
-                    row["Goal"] = f"{float(record['score_goal']):.2f}"
+                if pd.notna(record.get("goal_score")):
+                    row["Goal"] = f"{float(record['goal_score']):.2f}"
 
-                elif pd.notna(record.get("dive_number")):
-                    row["Goal"] = str(record["dive_number"])
+                elif pd.notna(record.get("goal_dive_number")):
+                    row["Goal"] = str(record["goal_dive_number"])
 
                 if pd.notna(record.get("date_added")):
                     row["Date Added"] = (
@@ -130,3 +130,4 @@ def render_view_goals_page(supabase):
         hide_index=True,
         use_container_width=True
     )
+    st.write(goals)
