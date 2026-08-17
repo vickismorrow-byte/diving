@@ -26,7 +26,6 @@ SCORE_GOAL_TYPES = [
 
 
 def render_edit_goals_page(supabase):
-
     st.title("View & Edit Goals")
 
     # -------------------------
@@ -68,7 +67,7 @@ def render_edit_goals_page(supabase):
     with col1:
         season_filter = st.selectbox(
             "Season",
-            ["All", "Boys", "Girls"]
+            ["All", "Boys", "Girls"],
         )
 
     filtered_divers = divers_rows.copy()
@@ -90,56 +89,81 @@ def render_edit_goals_page(supabase):
     with col2:
         selected_diver = st.selectbox(
             "Diver",
-            ["Select Diver"] + available_divers
+            ["Select Diver"] + available_divers,
         )
 
     if selected_diver == "Select Diver":
         return
 
     # -------------------------
-    # Existing Goals
+    # Build Fixed 7 Goal Rows
     # -------------------------
-    filtered_goals = [
+    diver_goals = [
         g
         for g in goals_rows
         if g["diver"] == selected_diver
     ]
 
-    df = pd.DataFrame(filtered_goals)
+    rows = []
 
-    if df.empty:
-        df = pd.DataFrame(
-            columns=[
-                "goal_id",
-                "diver",
-                "goal_type",
-                "goal_dive_number",
-                "goal_score",
-                "date_added",
-            ]
-        )
+    for goal_type in GOAL_TYPES:
+        matching = [
+            g
+            for g in diver_goals
+            if g.get("goal_type") == goal_type
+        ]
+
+        if matching:
+            newest = sorted(
+                matching,
+                key=lambda x: str(x.get("date_added") or ""),
+                reverse=True,
+            )[0]
+
+            rows.append(
+                {
+                    "goal_id": newest.get("goal_id"),
+                    "diver": selected_diver,
+                    "goal_type": goal_type,
+                    "goal_dive_number": newest.get("goal_dive_number"),
+                    "goal_score": newest.get("goal_score"),
+                    "date_added": newest.get("date_added"),
+                }
+            )
+        else:
+            rows.append(
+                {
+                    "goal_id": None,
+                    "diver": selected_diver,
+                    "goal_type": goal_type,
+                    "goal_dive_number": None,
+                    "goal_score": None,
+                    "date_added": None,
+                }
+            )
+
+    df = pd.DataFrame(rows)
 
     st.subheader("Goals")
 
     edited_df = st.data_editor(
         df,
         use_container_width=True,
-        num_rows="dynamic",
+        hide_index=True,
+        num_rows="fixed",
         key="goals_editor",
         disabled=[
             "goal_id",
             "date_added",
+            "goal_type",
         ],
         column_config={
-            "diver": st.column_config.SelectboxColumn(
+            "diver": st.column_config.TextColumn(
                 "Diver",
-                options=available_divers,
-                required=True,
+                disabled=True,
             ),
-            "goal_type": st.column_config.SelectboxColumn(
+            "goal_type": st.column_config.TextColumn(
                 "Goal Type",
-                options=GOAL_TYPES,
-                required=True,
             ),
             "goal_dive_number": st.column_config.SelectboxColumn(
                 "Dive Number",
@@ -155,90 +179,83 @@ def render_edit_goals_page(supabase):
     # -------------------------
     # Save Changes
     # -------------------------
-    # -------------------------
-# Save Changes
-# -------------------------
-if st.button(
-    "Save Changes",
-    type="primary",
-):
+    if st.button(
+        "Save Changes",
+        type="primary",
+    ):
+        try:
+            existing_ids = {
+                r["goal_id"]
+                for r in goals_rows
+                if r.get("goal_id") is not None
+            }
 
-    try:
+            for _, row in edited_df.iterrows():
+                record = row.to_dict()
 
-        existing_ids = {
-            r["goal_id"]
-            for r in goals_rows
-            if r.get("goal_id") is not None
-        }
+                for k, v in record.items():
+                    if pd.isna(v):
+                        record[k] = None
 
-        for _, row in edited_df.iterrows():
+                goal_id = record.get("goal_id")
+                goal_type = record.get("goal_type")
 
-            record = row.to_dict()
-
-            goal_id = record.get("goal_id")
-            goal_type = record.get("goal_type")
-
-            if not goal_type:
-                continue
-
-            # Convert NaN to None
-            for k, v in record.items():
-                if pd.isna(v):
-                    record[k] = None
-
-            # Apply constraint rules
-            if goal_type in DIVE_GOAL_TYPES:
-
-                record["goal_score"] = None
-
-                if not record.get("goal_dive_number"):
+                if not goal_type:
                     continue
 
-            elif goal_type in SCORE_GOAL_TYPES:
+                # -------------------------
+                # Dive Goals
+                # -------------------------
+                if goal_type in DIVE_GOAL_TYPES:
+                    record["goal_score"] = None
 
-                record["dive_number"] = None
+                    # Skip if only type populated
+                    if not record.get("goal_dive_number"):
+                        continue
 
-                if record.get("goal_score") is None:
-                    continue
+                # -------------------------
+                # Score Goals
+                # -------------------------
+                elif goal_type in SCORE_GOAL_TYPES:
+                    record["goal_dive_number"] = None
 
-            # UPDATE EXISTING
-            if (
-                goal_id is not None
-                and goal_id in existing_ids
-            ):
+                    # Skip if only type populated
+                    if record.get("goal_score") is None:
+                        continue
 
                 update_record = {
-                    "diver": record["diver"],
-                    "goal_type": record["goal_type"],
+                    "diver": selected_diver,
+                    "goal_type": goal_type,
                     "goal_dive_number": record.get("goal_dive_number"),
                     "goal_score": record.get("goal_score"),
                 }
 
-                (
-                    supabase.table("goals")
-                    .update(update_record)
-                    .eq("goal_id", int(goal_id))
-                    .execute()
-                )
+                # -------------------------
+                # UPDATE
+                # -------------------------
+                if (
+                    goal_id is not None
+                    and goal_id in existing_ids
+                ):
+                    (
+                        supabase.table("goals")
+                        .update(update_record)
+                        .eq("goal_id", int(goal_id))
+                        .execute()
+                    )
 
-            # INSERT NEW
-            else:
+                # -------------------------
+                # INSERT
+                # -------------------------
+                else:
+                    (
+                        supabase.table("goals")
+                        .insert(update_record)
+                        .execute()
+                    )
 
-                insert_record = {
-                    "diver": record["diver"],
-                    "goal_type": record["goal_type"],
-                    "goal_dive_number": record.get("goal_dive_number"),
-                    "goal_score": record.get("goal_score"),
-                }
+            st.success("Goals updated successfully.")
+            st.rerun()
 
-                (
-                    supabase.table("goals")
-                    .insert(insert_record)
-                    .execute()
-                )
-
-        st.success("Goals updated successfully.")
-        st.rerun()
-
-    except Exception as ex:
-        st.error(f"Update failed: {ex}")
+        except Exception as ex:
+            st.error(f"Update failed: {ex}")
