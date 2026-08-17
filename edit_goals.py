@@ -184,13 +184,7 @@ def render_edit_goals_page(supabase):
         type="primary",
     ):
         try:
-            existing_ids = {
-                r["goal_id"]
-                for r in goals_rows
-                if r.get("goal_id") is not None
-            }
-
-            updates_made = 0
+            inserts_made = 0
 
             for idx, row in edited_df.iterrows():
                 record = row.to_dict()
@@ -199,7 +193,6 @@ def render_edit_goals_page(supabase):
                     if pd.isna(v):
                         record[k] = None
 
-                goal_id = record.get("goal_id")
                 goal_type = record.get("goal_type")
 
                 if not goal_type:
@@ -211,7 +204,6 @@ def render_edit_goals_page(supabase):
                 if goal_type in DIVE_GOAL_TYPES:
                     record["goal_score"] = None
 
-                    # Skip if only type populated
                     if not record.get("goal_dive_number"):
                         continue
 
@@ -221,27 +213,23 @@ def render_edit_goals_page(supabase):
                 elif goal_type in SCORE_GOAL_TYPES:
                     record["goal_dive_number"] = None
 
-                    # Skip if only type populated
                     if record.get("goal_score") is None:
                         continue
 
-                update_record = {
+                insert_record = {
                     "diver": selected_diver,
                     "goal_type": goal_type,
                     "goal_dive_number": record.get("goal_dive_number"),
                     "goal_score": record.get("goal_score"),
                 }
 
-                # Never send date_added on updates
-                update_record.pop("date_added", None)
+                goal_id = record.get("goal_id")
 
                 # -------------------------
-                # UPDATE ONLY IF CHANGED
+                # EXISTING ROW
+                # Insert only if changed
                 # -------------------------
-                if (
-                    goal_id is not None
-                    and goal_id in existing_ids
-                ):
+                if goal_id is not None:
                     original_row = df.iloc[idx]
 
                     original_record = {
@@ -251,28 +239,29 @@ def render_edit_goals_page(supabase):
                         "goal_score": original_row.get("goal_score"),
                     }
 
-                    if update_record != original_record:
+                    if insert_record != original_record:
                         (
                             supabase.table("goals")
-                            .update(update_record)
-                            .eq("goal_id", int(goal_id))
+                            .insert(insert_record)
                             .execute()
                         )
-                        updates_made += 1
+                        inserts_made += 1
 
                 # -------------------------
-                # INSERT
+                # NEW ROW
                 # -------------------------
                 else:
                     (
                         supabase.table("goals")
-                        .insert(update_record)
+                        .insert(insert_record)
                         .execute()
                     )
-                    updates_made += 1
+                    inserts_made += 1
 
-            st.success(f"{updates_made} goal(s) saved successfully.")
+            st.success(f"{inserts_made} goal(s) inserted successfully.")
+
+            # Refresh editor with latest data
             st.rerun()
 
         except Exception as ex:
-            st.error(f"Update failed: {ex}")
+            st.error(f"Save failed: {ex}")
