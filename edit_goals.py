@@ -190,7 +190,9 @@ def render_edit_goals_page(supabase):
                 if r.get("goal_id") is not None
             }
 
-            for _, row in edited_df.iterrows():
+            updates_made = 0
+
+            for idx, row in edited_df.iterrows():
                 record = row.to_dict()
 
                 for k, v in record.items():
@@ -230,19 +232,33 @@ def render_edit_goals_page(supabase):
                     "goal_score": record.get("goal_score"),
                 }
 
+                # Never send date_added on updates
+                update_record.pop("date_added", None)
+
                 # -------------------------
-                # UPDATE
+                # UPDATE ONLY IF CHANGED
                 # -------------------------
                 if (
                     goal_id is not None
                     and goal_id in existing_ids
                 ):
-                    (
-                        supabase.table("goals")
-                        .update(update_record)
-                        .eq("goal_id", int(goal_id))
-                        .execute()
-                    )
+                    original_row = df.iloc[idx]
+
+                    original_record = {
+                        "diver": selected_diver,
+                        "goal_type": original_row.get("goal_type"),
+                        "goal_dive_number": original_row.get("goal_dive_number"),
+                        "goal_score": original_row.get("goal_score"),
+                    }
+
+                    if update_record != original_record:
+                        (
+                            supabase.table("goals")
+                            .update(update_record)
+                            .eq("goal_id", int(goal_id))
+                            .execute()
+                        )
+                        updates_made += 1
 
                 # -------------------------
                 # INSERT
@@ -253,8 +269,9 @@ def render_edit_goals_page(supabase):
                         .insert(update_record)
                         .execute()
                     )
+                    updates_made += 1
 
-            st.success("Goals updated successfully.")
+            st.success(f"{updates_made} goal(s) saved successfully.")
             st.rerun()
 
         except Exception as ex:
