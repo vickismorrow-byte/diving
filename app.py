@@ -24,6 +24,8 @@ from score_progression import render_score_progression_page
 from edit_results import render_edit_results_page
 from boxplots import render_dive_score_distribution_page
 from add_results import render_add_results_page
+from view_goals import render_view_goals_page
+from edit_goals import render_edit_goals_page
 
 # =====================================================
 # PAGE CONFIG
@@ -330,6 +332,10 @@ with st.sidebar:
         if st.button("Dive Analysis"):
             st.session_state.page = "Dive Analysis"
 
+        if st.button("View Goals"):
+            st.session_state.page = "View Goals"
+        
+
     if st.session_state.is_admin:
         with st.expander("⚙️ Administration"):
             if st.button("Approve Users"):
@@ -343,6 +349,8 @@ with st.sidebar:
                 st.session_state.page = "Add Results"
             if st.button("View/Edit Results"):
                 st.session_state.page = "View/Edit Results"
+            if st.button("View/Edit Goals"):
+                st.session_state.page = "View/Edit Goals"
 
 page = st.session_state.page
 
@@ -1003,3 +1011,9 @@ elif page == "View/Edit Results":
 
 elif page == "Dive Analysis":
     render_dive_score_distribution_page(supabase)
+
+elif page == "View Goals":
+    render_view_goals_page(supabase)
+
+elif page == "View/Edit Goals":
+    render_edit_goals_page(supabase)
