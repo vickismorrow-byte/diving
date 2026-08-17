@@ -130,4 +130,3 @@ def render_view_goals_page(supabase):
         hide_index=True,
         use_container_width=True
     )
-    st.write(goals)
