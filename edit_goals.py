@@ -155,77 +155,90 @@ def render_edit_goals_page(supabase):
     # -------------------------
     # Save Changes
     # -------------------------
-    if st.button(
-        "Save Changes",
-        type="primary"
-    ):
+    # -------------------------
+# Save Changes
+# -------------------------
+if st.button(
+    "Save Changes",
+    type="primary",
+):
 
-        try:
+    try:
 
-            existing_ids = {
-                row["goal_id"]
-                for row in goals_rows
-            }
+        existing_ids = {
+            r["goal_id"]
+            for r in goals_rows
+            if r.get("goal_id") is not None
+        }
 
-            for _, row in edited_df.iterrows():
+        for _, row in edited_df.iterrows():
 
-                record = row.to_dict()
+            record = row.to_dict()
 
-                goal_id = record.get("goal_id")
+            goal_id = record.get("goal_id")
+            goal_type = record.get("goal_type")
 
-                goal_type = record.get("goal_type")
+            if not goal_type:
+                continue
 
-                if not goal_type:
+            # Convert NaN to None
+            for k, v in record.items():
+                if pd.isna(v):
+                    record[k] = None
+
+            # Apply constraint rules
+            if goal_type in DIVE_GOAL_TYPES:
+
+                record["score_goal"] = None
+
+                if not record.get("dive_number"):
                     continue
 
-                # Apply constraint rules
+            elif goal_type in SCORE_GOAL_TYPES:
 
-                if goal_type in DIVE_GOAL_TYPES:
+                record["dive_number"] = None
 
-                    record["score_goal"] = None
+                if record.get("score_goal") is None:
+                    continue
 
-                    if not record.get("dive_number"):
-                        continue
+            # UPDATE EXISTING
+            if (
+                goal_id is not None
+                and goal_id in existing_ids
+            ):
 
-                elif goal_type in SCORE_GOAL_TYPES:
+                update_record = {
+                    "diver": record["diver"],
+                    "goal_type": record["goal_type"],
+                    "dive_number": record.get("dive_number"),
+                    "score_goal": record.get("score_goal"),
+                }
 
-                    record["dive_number"] = None
+                (
+                    supabase.table("goals")
+                    .update(update_record)
+                    .eq("goal_id", int(goal_id))
+                    .execute()
+                )
 
-                    if pd.isna(record.get("score_goal")):
-                        continue
+            # INSERT NEW
+            else:
 
-                # UPDATE
-                if (
-                    pd.notna(goal_id)
-                    and goal_id in existing_ids
-                ):
+                insert_record = {
+                    "diver": record["diver"],
+                    "goal_type": record["goal_type"],
+                    "dive_number": record.get("dive_number"),
+                    "score_goal": record.get("score_goal"),
+                }
 
-                    record.pop(
-                        "goal_id",
-                        None
-                    )
+                (
+                    supabase.table("goals")
+                    .insert(insert_record)
+                    .execute()
+                )
 
-                    record.pop(
-                        "date_added",
-                        None
-                    )
+        st.success("Goals updated successfully.")
+        st.rerun()
 
-                    (
-                        supabase.table("goals")
-                        .update(record)
-                        .eq("goal_id", int(goal_id))
-                        .execute()
-                    )
-
-                # INSERT
-                else:
-
-                    insert_record = {
-                        "diver": record["diver"],
-                        "goal_type": record["goal_type"],
-                        "dive_number": record.get(
-                            "dive_number"
-                        ),
-                        "score_goal": record.get(
-                            "score_goal"
- 
+    except Exception as ex:
+        st.error(f"Update failed: {ex}")
