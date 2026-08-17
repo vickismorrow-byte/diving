@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-
 GOAL_TYPES = [
     "Forward",
     "Backward",
@@ -53,7 +52,7 @@ def render_edit_goals_page(supabase):
         supabase.table("goals")
         .select("*")
         .execute()
-        .dat*
+        .data
     )
 
     dive_numbers = [
@@ -61,53 +60,56 @@ def render_edit_goals_page(supabase):
         for d in dives_rows
     ]
 
-    # ---------*---------------
+    # -------------------------
     # Filters
-    * -------------------------
-    col*, col2 = st.columns(2)
+    # -------------------------
+    col1, col2 = st.columns(2)
 
-    with c*l1:
-        season_filter = st.sel*ctbox(
+    with col1:
+        season_filter = st.selectbox(
             "Season",
-     *      ["All", "Boys", "Girls"]
-   *    )
+            ["All", "Boys", "Girls"]
+        )
 
-    filtered_divers = diver*_rows.copy()
+    filtered_divers = divers_rows.copy()
 
-    if season_filter*!= "All":
-        filtered_divers * [
+    if season_filter != "All":
+        filtered_divers = [
             d
             for d in filtered_divers
             if d["season"] == season_filter
         ]
 
-    available_divers = sorted(*        {
+    available_divers = sorted(
+        {
             d["diver"]
- *          for d in filtered_divers*        }
+            for d in filtered_divers
+        }
     )
 
     with col2:
-  *     selected_diver = st.selectbox*
-            "Diver *",
-          * ["Select Diver"] + available_dive*s
+        selected_diver = st.selectbox(
+            "Diver",
+            ["Select Diver"] + available_divers
         )
 
-    if selected_diver*== "Select Diver":
+    if selected_diver == "Select Diver":
         return
-*    # -------------------------
-  * # Existing Goals
-    # ----------*--------------
-    filtered_goals * [
+
+    # -------------------------
+    # Existing Goals
+    # -------------------------
+    filtered_goals = [
         g
         for g in goals_rows
         if g["diver"] == selected_diver
     ]
 
-    df = pd.Data*rame(filtered_goals)
+    df = pd.DataFrame(filtered_goals)
 
-    if df.em*ty:
+    if df.empty:
         df = pd.DataFrame(
-   *        columns=[
+            columns=[
                 "goal_id",
                 "diver",
                 "goal_type",
@@ -115,75 +117,77 @@ def render_edit_goals_page(supabase):
                 "score_goal",
                 "date_added",
             ]
-     *  )
+        )
 
     st.subheader("Goals")
 
-  * edited_df = st.data_editor(
-     *  df,
-        use_container_width=*rue,
+    edited_df = st.data_editor(
+        df,
+        use_container_width=True,
         num_rows="dynamic",
- *      key="goals_editor",
-        *isabled=[
+        key="goals_editor",
+        disabled=[
             "goal_id",
             "date_added",
-        ],*        column_config={
-          * "diver": st.column_config.Selectb*xColumn(
+        ],
+        column_config={
+            "diver": st.column_config.SelectboxColumn(
                 "Diver",
-*               options=available_d*vers,
-                required=Tru*,
-            ),
-            "goal*type": st.column_config.SelectboxC*lumn(
-                "Goal Type",*                options=GOAL_TYPES*
+                options=available_divers,
                 required=True,
-  *         ),
-            "dive_numb*r": st.column_config.SelectboxColu*n(
-                "Dive Number",
-*               options=dive_number*,
             ),
-            "scor*_goal": st.column_config.NumberCol*mn(
+            "goal_type": st.column_config.SelectboxColumn(
+                "Goal Type",
+                options=GOAL_TYPES,
+                required=True,
+            ),
+            "dive_number": st.column_config.SelectboxColumn(
+                "Dive Number",
+                options=dive_numbers,
+            ),
+            "score_goal": st.column_config.NumberColumn(
                 "Score Goal",
-*               format="%.2f",
-    *       ),
+                format="%.2f",
+            ),
         },
     )
 
-    # *------------------------
-    # Sav* Changes
-    # -------------------*-----
+    # -------------------------
+    # Save Changes
+    # -------------------------
     if st.button(
-        "S*ve Changes",
-        type="primary*
+        "Save Changes",
+        type="primary"
     ):
 
         try:
 
-           *existing_ids = {
-                r*w["goal_id"]
-                for r*w in goals_rows
+            existing_ids = {
+                row["goal_id"]
+                for row in goals_rows
             }
 
-   *        for _, row in edited_df.it*rrows():
+            for _, row in edited_df.iterrows():
 
-                record =*row.to_dict()
+                record = row.to_dict()
 
-                goa*_id = record.get("goal_id")
+                goal_id = record.get("goal_id")
 
-     *          goal_type = record.get("*oal_type")
+                goal_type = record.get("goal_type")
 
-                if not*goal_type:
-                    con*inue
+                if not goal_type:
+                    continue
 
-                # Apply cons*raint rules
+                # Apply constraint rules
 
-                if go*l_type in DIVE_GOAL_TYPES:
+                if goal_type in DIVE_GOAL_TYPES:
 
-      *             record["score_goal"] * None
+                    record["score_goal"] = None
 
-                    if not *ecord.get("dive_number"):
-        *               continue
+                    if not record.get("dive_number"):
+                        continue
 
-         *      elif goal_type in SCORE_GOAL*TYPES:
+                elif goal_type in SCORE_GOAL_TYPES:
 
                     record["dive_number"] = None
 
@@ -224,72 +228,4 @@ def render_edit_goals_page(supabase):
                         ),
                         "score_goal": record.get(
                             "score_goal"
-                        ),
-                    }
-
-                    (
-                        supabase.table("goals")
-                        .insert(insert_record)
-                        .execute()
-                    )
-
-            st.success(
-                "Goals updated successfully."
-            )
-
-            st.rerun()
-
-        except Exception as ex:
-            st.error(
-                f"Update failed: {ex}"
-            )
-
-    st.divider()
-
-    st.subheader("Delete Goal")
-
-    goal_options = {}
-
-    for g in filtered_goals:
-
-        goal_options[
-            f"{g['goal_id']} | {g['goal_type']} | {g['date_added']}"
-        ] = g["goal_id"]
-
-    if goal_options:
-
-        selected_goal = st.selectbox(
-            "Select Goal",
-            list(goal_options.keys())
-        )
-
-        confirm_delete = st.checkbox(
-            "I understand this action cannot be undone"
-        )
-
-        if st.button("Delete Goal"):
-
-            if not confirm_delete:
-
-                st.error(
-                    "Confirmation required."
-                )
-
-            else:
-
-                goal_id = goal_options[
-                    selected_goal
-                ]
-
-                (
-                    supabase.table("goals")
-                    .delete()
-                    .eq("goal_id", goal_id)
-                    .execute()
-                )
-
-                st.success(
-                    "Goal deleted successfully."
-                )
-
-                st.rerun()
+ 
