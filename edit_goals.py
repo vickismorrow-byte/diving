@@ -54,10 +54,7 @@ def render_edit_goals_page(supabase):
         .data
     )
 
-    dive_numbers = [
-        d["dive_number"]
-        for d in dives_rows
-    ]
+    dive_numbers = [d["dive_number"] for d in dives_rows]
 
     # -------------------------
     # Filters
@@ -148,10 +145,10 @@ def render_edit_goals_page(supabase):
 
     edited_df = st.data_editor(
         df,
+        key="goals_editor",
         use_container_width=True,
         hide_index=True,
         num_rows="fixed",
-        key="goals_editor",
         disabled=[
             "goal_id",
             "date_added",
@@ -186,81 +183,75 @@ def render_edit_goals_page(supabase):
         try:
             inserts_made = 0
 
-            for idx, row in edited_df.iterrows():
-                record = row.to_dict()
+            editor_state = st.session_state.get(
+                "goals_editor",
+                {}
+            )
 
-                for k, v in record.items():
-                    if pd.isna(v):
-                        record[k] = None
+            edited_rows = editor_state.get(
+                "edited_rows",
+                {}
+            )
 
-                goal_type = record.get("goal_type")
+            # Nothing changed
+            if not edited_rows:
+                st.info("No changes detected.")
+                return
 
-                if not goal_type:
-                    continue
+            for row_index in edited_rows.keys():
+
+                row = edited_df.iloc[row_index]
+
+                goal_type = row["goal_type"]
+
+                goal_dive_number = row["goal_dive_number"]
+                goal_score = row["goal_score"]
+
+                if pd.isna(goal_dive_number):
+                    goal_dive_number = None
+
+                if pd.isna(goal_score):
+                    goal_score = None
 
                 # -------------------------
                 # Dive Goals
                 # -------------------------
                 if goal_type in DIVE_GOAL_TYPES:
-                    record["goal_score"] = None
 
-                    if not record.get("goal_dive_number"):
+                    goal_score = None
+
+                    if not goal_dive_number:
                         continue
 
                 # -------------------------
                 # Score Goals
                 # -------------------------
                 elif goal_type in SCORE_GOAL_TYPES:
-                    record["goal_dive_number"] = None
 
-                    if record.get("goal_score") is None:
+                    goal_dive_number = None
+
+                    if goal_score is None:
                         continue
 
                 insert_record = {
                     "diver": selected_diver,
                     "goal_type": goal_type,
-                    "goal_dive_number": record.get("goal_dive_number"),
-                    "goal_score": record.get("goal_score"),
+                    "goal_dive_number": goal_dive_number,
+                    "goal_score": goal_score,
                 }
 
-                goal_id = record.get("goal_id")
+                (
+                    supabase.table("goals")
+                    .insert(insert_record)
+                    .execute()
+                )
 
-                # -------------------------
-                # EXISTING ROW
-                # Insert only if changed
-                # -------------------------
-                if goal_id is not None:
-                    original_row = df.iloc[idx]
+                inserts_made += 1
 
-                    original_record = {
-                        "diver": selected_diver,
-                        "goal_type": original_row.get("goal_type"),
-                        "goal_dive_number": original_row.get("goal_dive_number"),
-                        "goal_score": original_row.get("goal_score"),
-                    }
+            st.success(
+                f"{inserts_made} goal(s) inserted successfully."
+            )
 
-                    if insert_record != original_record:
-                        (
-                            supabase.table("goals")
-                            .insert(insert_record)
-                            .execute()
-                        )
-                        inserts_made += 1
-
-                # -------------------------
-                # NEW ROW
-                # -------------------------
-                else:
-                    (
-                        supabase.table("goals")
-                        .insert(insert_record)
-                        .execute()
-                    )
-                    inserts_made += 1
-
-            st.success(f"{inserts_made} goal(s) inserted successfully.")
-
-            # Refresh editor with latest data
             st.rerun()
 
         except Exception as ex:
