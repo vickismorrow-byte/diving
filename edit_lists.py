@@ -143,28 +143,30 @@ def render_edit_lists_page(supabase):
             optional_dd = dd_lookup.get(optional_dive)
 
         if category == "11th Dive":
-            voluntary_dive = "XXXXXX"
-            voluntary_dd = "XXXXXX"
+            voluntary_dive = "XXXX"
+            voluntary_dd = "XXX"
+
+        if voluntary_dd is None or voluntary_dd == "":
+            voluntary_dd_display = ""
+        elif voluntary_dd == "XXX":
+            voluntary_dd_display = "XXX"
+        else:
+            voluntary_dd_display = f"{float(voluntary_dd):.1f}"
+
+        if optional_dd is None or optional_dd == "":
+            optional_dd_display = ""
+        elif optional_dd == "XXX":
+            optional_dd_display = "XXX"
+        else:
+            optional_dd_display = f"{float(optional_dd):.1f}"
             
         rows.append(
-            {
+                {
                 "Category": category,
                 "Voluntary": voluntary_dive,
-                "Voluntary DD": (
-                    f"{float(voluntary_dd):.1f}"
-                    if voluntary_dd is not None
-                    and voluntary_dd != "XXXXXX"
-                    and voluntary_dd != ""
-                    else ""
-                ),
+                "Voluntary DD": voluntary_dd_display,
                 "Optional": optional_dive,
-                "Optional DD": (
-                    f"{float(optional_dd):.1f}"
-                    if optional_dd is not None
-                    and optional_dd != "XXXXXX"
-                    and optional_dd != ""
-                    else ""
-                ),
+                "Optional DD": optional_dd_display,
             }
         )
 
