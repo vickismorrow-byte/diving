@@ -174,9 +174,18 @@ def render_edit_lists_page(supabase):
     df = pd.DataFrame(rows)
 
     st.subheader("Current List")
+    st.caption('When editing the list, only change Dive Numbers, the DD will change automatically when you click "Save Changes"')
+
+    styled_df = df.style.set_properties(
+        subset=["Voluntary DD", "Optional DD"],
+        **{
+            "background-color": "#f0f0f0",
+            "color": "#888888",
+        }
+    )
 
     edited_df = st.data_editor(
-        df,
+        styled_df,
         key="lists_editor",
         hide_index=True,
         use_container_width=True,
