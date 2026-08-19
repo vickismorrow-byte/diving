@@ -143,8 +143,8 @@ def render_edit_lists_page(supabase):
             optional_dd = dd_lookup.get(optional_dive)
 
         if category == "11th Dive":
-            voluntary_dive = "XXXXXX",
-            voluntary_dd = "XXXXXX",
+            voluntary_dive = "XXXXXX"
+            voluntary_dd = "XXXXXX"
             
         rows.append(
             {
@@ -153,6 +153,7 @@ def render_edit_lists_page(supabase):
                 "Voluntary DD": (
                     f"{float(voluntary_dd):.1f}"
                     if voluntary_dd is not None
+                    and voluntary_dd != "XXXXXX"
                     and voluntary_dd != ""
                     else ""
                 ),
@@ -160,6 +161,7 @@ def render_edit_lists_page(supabase):
                 "Optional DD": (
                     f"{float(optional_dd):.1f}"
                     if optional_dd is not None
+                    and optional_dd != "XXXXXX"
                     and optional_dd != ""
                     else ""
                 ),
