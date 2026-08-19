@@ -163,20 +163,12 @@ def render_view_lists_page(supabase):
             }
         )
 
-    display_df = pd.DataFrame(rows)
+    display_df = pd.DataFrame(rows).set_index("Category")
 
     st.subheader(f"{selected_diver} Current List")
 
-    styled_df = (
-            display_df.style
-            .set_properties(
-                subset=["Category"],
-                **{"font-weight": "bold"}
-            )
-        )
-
     st.dataframe(
-        styled_df,
-        hide_index=True,
+        display_df,
+        hide_index=False,
         use_container_width=True,
     )
