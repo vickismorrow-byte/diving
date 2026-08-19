@@ -142,14 +142,17 @@ def render_edit_lists_page(supabase):
             optional_dive = newest["dive_number"]
             optional_dd = dd_lookup.get(optional_dive)
 
+        if category == "11th Dive":
+            voluntary_dive = "XXXXXX",
+            voluntary_dd = "XXXXXX",
+            
         rows.append(
              {
                 "Category": category,
                 "Voluntary": voluntary_dive,
-                "Voluntary DD": voluntary_dd,
-                "": "",
+                "Voluntary DD": f"{voluntary_dd:.1f}",
                 "Optional": optional_dive,
-                "Optional DD": optional_dd,
+                "Optional DD": f"{optional_dd:.1f}",
             }
         )
 

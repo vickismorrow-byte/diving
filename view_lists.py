@@ -135,14 +135,17 @@ def render_view_lists_page(supabase):
                 ""
             )
 
+        if category == "11th Dive":
+            voluntary_dive = "XXXXXX",
+            voluntary_dd = "XXXXXX",
+            
         rows.append(
-            {
+             {
                 "Category": category,
                 "Voluntary": voluntary_dive,
-                "Voluntary DD": voluntary_dd,
-                "": "",
+                "Voluntary DD": f"{voluntary_dd:.1f}",
                 "Optional": optional_dive,
-                "Optional DD": optional_dd,
+                "Optional DD": f"{optional_dd:.1f}",
             }
         )
 
