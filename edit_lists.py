@@ -41,7 +41,7 @@ def render_edit_lists_page(supabase):
         .data
     )
 
-    dive_numbers = [
+    dive_numbers = ["XXXX"] + [
         row["dive_number"]
         for row in dives_rows
     ]
