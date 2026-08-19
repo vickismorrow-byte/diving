@@ -26,6 +26,8 @@ from boxplots import render_dive_score_distribution_page
 from add_results import render_add_results_page
 from view_goals import render_view_goals_page
 from edit_goals import render_edit_goals_page
+from view_lists import render_view_lists_page
+from edit_lists import render_edit_lists_page
 
 # =====================================================
 # PAGE CONFIG
@@ -332,6 +334,9 @@ with st.sidebar:
         if st.button("Dive Analysis"):
             st.session_state.page = "Dive Analysis"
 
+        if st.button("View Current Lists"):
+            st.session_state.page = "View Current Lists"
+
         if st.button("View Goals"):
             st.session_state.page = "View Goals"
         
@@ -349,6 +354,8 @@ with st.sidebar:
                 st.session_state.page = "Add Results"
             if st.button("View/Edit Results"):
                 st.session_state.page = "View/Edit Results"
+            if st.button("View/Edit Current Lists"):
+                st.session_state.page = "View/Edit Current Lists"
             if st.button("View/Edit Goals"):
                 st.session_state.page = "View/Edit Goals"
 
@@ -1017,3 +1024,9 @@ elif page == "View Goals":
 
 elif page == "View/Edit Goals":
     render_edit_goals_page(supabase)
+
+elif page == "View Current Lists":
+    render_view_lists_page(supabase)
+
+elif page == "View/Edit Current Lists":
+    render_edit_lists_page(supabase)
