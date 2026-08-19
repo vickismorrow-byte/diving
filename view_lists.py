@@ -143,9 +143,19 @@ def render_view_lists_page(supabase):
              {
                 "Category": category,
                 "Voluntary": voluntary_dive,
-                "Voluntary DD": f"{voluntary_dd:.1f}",
+                "Voluntary DD": (
+                    f"{float(voluntary_dd):.1f}"
+                    if voluntary_dd is not None
+                    and voluntary_dd != ""
+                    else ""
+                ),
                 "Optional": optional_dive,
-                "Optional DD": f"{optional_dd:.1f}",
+                "Optional DD": (
+                    f"{float(optional_dd):.1f}"
+                    if optional_dd is not None
+                    and optional_dd != ""
+                    else ""
+                ),
             }
         )
 
