@@ -59,7 +59,8 @@ def render_edit_lists_page(supabase):
 
     with col1:
        season_filter = st.selectbox(
-            ["Season", "All", "Boys", "Girls"]
+            "Season",
+            ["All", "Boys", "Girls"]
         )
     filtered_divers = divers_rows.copy()
 
