@@ -258,3 +258,56 @@ def render_view_goals_page(supabase):
         hide_index=True,
         use_container_width=True
     )
+
+    # -------------------------
+    # Completed Goals History
+    # -------------------------
+    completed_goal_rows = []
+
+    all_goals_df = pd.DataFrame(goals)
+
+    if not all_goals_df.empty:
+        all_goals_df["date_added"] = pd.to_datetime(
+            all_goals_df["date_added"]
+        )
+
+        for _, record in all_goals_df.iterrows():
+            completed = False
+            goal_value = ""
+
+            if pd.notna(record.get("goal_score")):
+                goal_score = float(record["goal_score"])
+
+                if record["goal_type"] == "6-Dive Score":
+                    completed = six_dive_best >= goal_score
+                elif record["goal_type"] == "11-Dive Score":
+                    completed = eleven_dive_best >= goal_score
+
+                goal_value = f"{goal_score:.2f}"
+
+            elif pd.notna(record.get("goal_dive_number")):
+                dive_number = str(record["goal_dive_number"])
+                completed = dive_number in completed_dives
+                goal_value = dive_number
+
+            if completed:
+                completed_goal_rows.append(
+                    {
+                        "Type": record["goal_type"],
+                        "Goal": goal_value,
+                        "Date Added": record["date_added"].strftime("%Y-%m-%d"),
+                    }
+                )
+
+    with st.expander("Completed Goals This Diving Year"):
+        if completed_goal_rows:
+            st.dataframe(
+                pd.DataFrame(completed_goal_rows)
+                .sort_values("Date Added", ascending=False),
+                hide_index=True,
+                use_container_width=True,
+            )
+        else:
+            st.info(
+                "No completed goals found for the current diving year."
+            )
