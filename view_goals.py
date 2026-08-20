@@ -112,6 +112,50 @@ def render_view_goals_page(supabase):
             ]["dive_number"]
         )
 
+
+    completed_score_goals = {}
+
+    if not results_df.empty:
+
+        meet_scores = (
+            results_df.groupby(
+                ["meet"],
+                as_index=False
+            )
+            .agg(
+                TotalScore=("score", "sum"),
+                DiveCount=("score", "count")
+            )
+        )
+
+        meet_scores = meet_scores[
+            meet_scores["meet"]
+            .astype(str)
+            .str[:4]
+            == current_diving_year
+        ]
+
+        six_dive_best = 0.0
+        eleven_dive_best = 0.0
+
+        six_scores = meet_scores[
+            meet_scores["DiveCount"] == 6
+        ]
+
+        eleven_scores = meet_scores[
+            meet_scores["DiveCount"] == 11
+        ]
+
+        if not six_scores.empty:
+            six_dive_best = float(
+                six_scores["TotalScore"].max()
+            )
+
+        if not eleven_scores.empty:
+            eleven_dive_best = float(
+                eleven_scores["TotalScore"].max()
+            )
+
     # -------------------------
     # Load Goals
     # -------------------------
@@ -158,7 +202,35 @@ def render_view_goals_page(supabase):
                 record = match.iloc[0]
 
                 if pd.notna(record.get("goal_score")):
-                    row["Goal"] = f"{float(record['goal_score']):.2f}"
+
+                    goal_score = float(record["goal_score"])
+
+                    completed = False
+
+                    if (
+                        record["goal_type"]
+                        == "6-Dive Score"
+                    ):
+                        completed = (
+                            six_dive_best >= goal_score
+                        )
+
+                    elif (
+                        record["goal_type"]
+                        == "11-Dive Score"
+                    ):
+                        completed = (
+                            eleven_dive_best >= goal_score
+                        )
+
+                    if completed:
+                        row["Goal"] = (
+                            f"{goal_score:.2f} ✅"
+                        )
+                    else:
+                        row["Goal"] = (
+                            f"{goal_score:.2f}"
+                        )
 
                 elif pd.notna(record.get("goal_dive_number")):
                     dive_number = str(record["goal_dive_number"])

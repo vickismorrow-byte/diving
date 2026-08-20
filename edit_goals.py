@@ -145,6 +145,49 @@ def render_edit_goals_page(supabase):
             ]["dive_number"]
         )
 
+    completed_score_goals = {}
+
+    if not results_df.empty:
+
+        meet_scores = (
+            results_df.groupby(
+                ["meet"],
+                as_index=False
+            )
+            .agg(
+                TotalScore=("score", "sum"),
+                DiveCount=("score", "count")
+            )
+        )
+
+        meet_scores = meet_scores[
+            meet_scores["meet"]
+            .astype(str)
+            .str[:4]
+            == current_diving_year
+        ]
+
+        six_dive_best = 0.0
+        eleven_dive_best = 0.0
+
+        six_scores = meet_scores[
+            meet_scores["DiveCount"] == 6
+        ]
+
+        eleven_scores = meet_scores[
+            meet_scores["DiveCount"] == 11
+        ]
+
+        if not six_scores.empty:
+            six_dive_best = float(
+                six_scores["TotalScore"].max()
+            )
+
+        if not eleven_scores.empty:
+            eleven_dive_best = float(
+                eleven_scores["TotalScore"].max()
+            )
+
     # -------------------------
     # Build Fixed 7 Goal Rows
     # -------------------------
@@ -176,13 +219,39 @@ def render_edit_goals_page(supabase):
 
             goal_dive_number = newest.get("goal_dive_number")
 
+            goal_score = newest.get("goal_score")
+
             status = ""
 
-            if (
-                goal_dive_number
-                and str(goal_dive_number) in completed_dives
-            ):
-                status = "✅ Completed"
+            if goal_type in [
+                "Forward",
+                "Backward",
+                "Reverse",
+                "Inward",
+                "Twister",
+            ]:
+                if (
+                    goal_dive_number
+                    and str(goal_dive_number)
+                    in completed_dives
+                ):
+                    status = "✅ Completed"
+
+            elif goal_type == "6-Dive Score":
+                if (
+                    goal_score is not None
+                    and float(goal_score)
+                    <= six_dive_best
+                ):
+                    status = "✅ Completed"
+
+            elif goal_type == "11-Dive Score":
+                if (
+                    goal_score is not None
+                    and float(goal_score)
+                    <= eleven_dive_best
+                ):
+                    status = "✅ Completed"
 
             rows.append(
                 {
@@ -190,7 +259,7 @@ def render_edit_goals_page(supabase):
                     "diver": selected_diver,
                     "goal_type": goal_type,
                     "goal_dive_number": goal_dive_number,
-                    "goal_score": newest.get("goal_score"),
+                    "goal_score": goal_score,
                     "status": status,
                     "date_added": newest.get("date_added"),
                 }
