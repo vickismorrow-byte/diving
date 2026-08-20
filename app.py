@@ -338,7 +338,7 @@ with st.sidebar:
     # =========================
     with st.expander("Analytics", expanded=True):
 
-        if st.button("Power Rankings", use_container_width=True):
+        if st.button("Power Rankings", type="primary", use_container_width=True):
             st.session_state.page = "Power Rankings"
 
         if st.button("Top Scores", use_container_width=True):
