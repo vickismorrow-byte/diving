@@ -264,46 +264,71 @@ def render_view_goals_page(supabase):
     # -------------------------
     completed_goal_rows = []
 
-    all_goals_df = pd.DataFrame(goals)
+    # results_df already loaded earlier
+    results_df["meet"] = results_df["meet"].astype(str)
 
-    if not all_goals_df.empty:
-        all_goals_df["date_added"] = pd.to_datetime(
-            all_goals_df["date_added"]
-        )
+    for _, record in all_goals_df.iterrows():
+        completed_date = None
+        goal_value = ""
 
-        for _, record in all_goals_df.iterrows():
-            completed = False
-            goal_value = ""
+        if pd.notna(record.get("goal_dive_number")):
+            dive_number = str(record["goal_dive_number"])
 
-            if pd.notna(record.get("goal_score")):
-                goal_score = float(record["goal_score"])
-
-                if record["goal_type"] == "6-Dive Score":
-                    completed = six_dive_best >= goal_score
-                elif record["goal_type"] == "11-Dive Score":
-                    completed = eleven_dive_best >= goal_score
-
-                goal_value = f"{goal_score:.2f}"
-
-            elif pd.notna(record.get("goal_dive_number")):
-                dive_number = str(record["goal_dive_number"])
-                completed = dive_number in completed_dives
-                goal_value = dive_number
-
-            if completed:
-                completed_goal_rows.append(
-                    {
-                        "Type": record["goal_type"],
-                        "Goal": goal_value,
-                        "Date Added": record["date_added"].strftime("%Y-%m-%d"),
-                    }
+            matching_results = results_df[
+                (results_df["dive_number"].astype(str) == dive_number)
+                & (results_df["score"] > 0)
+                & (
+                    results_df["meet"].str[:4]
+                    == current_diving_year
                 )
+            ].sort_values("meet")
+
+            if not matching_results.empty:
+                completed_date = matching_results.iloc[0]["meet"]
+
+            goal_value = dive_number
+
+        elif pd.notna(record.get("goal_score")):
+            goal_score = float(record["goal_score"])
+            goal_value = f"{goal_score:.2f}"
+
+            if record["goal_type"] == "6-Dive Score":
+                qualifying_meets = meet_scores[
+                    (meet_scores["DiveCount"] == 6)
+                    & (meet_scores["TotalScore"] >= goal_score)
+                ].sort_values("meet")
+
+            elif record["goal_type"] == "11-Dive Score":
+                qualifying_meets = meet_scores[
+                    (meet_scores["DiveCount"] == 11)
+                    & (meet_scores["TotalScore"] >= goal_score)
+                ].sort_values("meet")
+            else:
+                qualifying_meets = pd.DataFrame()
+
+            if not qualifying_meets.empty:
+                completed_date = qualifying_meets.iloc[0]["meet"]
+
+        if completed_date:
+            completed_goal_rows.append(
+                {
+                    "Completed": completed_date,
+                    "Type": record["goal_type"],
+                    "Goal": goal_value,
+                }
+            )
 
     with st.expander("Completed Goals This Diving Year"):
         if completed_goal_rows:
+            completed_df = pd.DataFrame(completed_goal_rows)
+
+            completed_df = completed_df.sort_values(
+                "Completed",
+                ascending=False
+            )
+
             st.dataframe(
-                pd.DataFrame(completed_goal_rows)
-                .sort_values("Date Added", ascending=False),
+                completed_df,
                 hide_index=True,
                 use_container_width=True,
             )
