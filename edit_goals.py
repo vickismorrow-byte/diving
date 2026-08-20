@@ -48,37 +48,6 @@ def render_edit_goals_page(supabase):
         .data
     )
 
-    # -------------------------
-    # Current Diving Year
-    # -------------------------
-    today = date.today()
-
-    diver_season = next(
-        (
-            d["season"]
-            for d in divers_rows
-            if d["diver"] == selected_diver
-        ),
-        None,
-    )
-
-    if (
-        diver_season == "Boys"
-        and today.month >= 8
-    ):
-        current_diving_year = str(today.year + 1)
-    else:
-        current_diving_year = str(today.year)
-
-
-    goals_rows = (
-        supabase.table("goals")
-        .select("*")
-        .execute()
-        .data
-    )
-
-    dive_numbers = [d["dive_number"] for d in dives_rows]
 
     # -------------------------
     # Filters
@@ -121,10 +90,32 @@ def render_edit_goals_page(supabase):
     # -------------------------
     today = date.today()
 
-    if today.month > 8:
+    diver_season = next(
+        (
+            d["season"]
+            for d in divers_rows
+            if d["diver"] == selected_diver
+        ),
+        None,
+    )
+
+    if (
+        diver_season == "Boys"
+        and today.month >= 8
+    ):
         current_diving_year = str(today.year + 1)
     else:
         current_diving_year = str(today.year)
+
+
+    goals_rows = (
+        supabase.table("goals")
+        .select("*")
+        .execute()
+        .data
+    )
+
+    dive_numbers = [d["dive_number"] for d in dives_rows]
 
     # -------------------------
     # Completed Dives
