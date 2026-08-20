@@ -320,7 +320,7 @@ def render_view_goals_page(supabase):
         if completed_date:
             completed_goal_rows.append(
                 {
-                    "Completed": completed_date,
+                    "First Competed At": completed_date,
                     "Type": record["goal_type"],
                     "Goal": goal_value,
                 }
@@ -331,7 +331,7 @@ def render_view_goals_page(supabase):
             completed_df = pd.DataFrame(completed_goal_rows)
 
             completed_df = completed_df.sort_values(
-                "Completed",
+                "First Competed At",
                 ascending=False
             )
 
