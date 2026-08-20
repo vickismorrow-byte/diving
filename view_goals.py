@@ -78,7 +78,7 @@ def render_view_goals_page(supabase):
 
     if (
         diver_season == "Boys"
-        and today.month > 8
+        and today.month >= 8
     ):
         current_diving_year = str(today.year + 1)
     else:
