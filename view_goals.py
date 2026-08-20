@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import date
 
 
 GOAL_TYPES = [
@@ -62,6 +63,56 @@ def render_view_goals_page(supabase):
         return
 
     # -------------------------
+    # Current Diving Year
+    # -------------------------
+    today = date.today()
+
+    diver_season = next(
+        (
+            d["season"]
+            for d in divers_rows
+            if d["diver"] == selected_diver
+        ),
+        None,
+    )
+
+    if (
+        diver_season == "Boys"
+        and today.month > 8
+    ):
+        current_diving_year = str(today.year + 1)
+    else:
+        current_diving_year = str(today.year)
+
+    # -------------------------
+    # Load Completed Dives
+    # -------------------------
+    results = (
+        supabase.table("results")
+        .select("dive_number,score,meet")
+        .eq("diver", selected_diver)
+        .execute()
+        .data
+    )
+
+    completed_dives = set()
+
+    results_df = pd.DataFrame(results)
+
+    if not results_df.empty:
+        results_df["meet"] = results_df["meet"].astype(str)
+
+        completed_dives = set(
+            results_df[
+                (results_df["score"] > 0)
+                & (
+                    results_df["meet"].str[:4]
+                    == current_diving_year
+                )
+            ]["dive_number"]
+        )
+
+    # -------------------------
     # Load Goals
     # -------------------------
     goals = (
@@ -110,7 +161,12 @@ def render_view_goals_page(supabase):
                     row["Goal"] = f"{float(record['goal_score']):.2f}"
 
                 elif pd.notna(record.get("goal_dive_number")):
-                    row["Goal"] = str(record["goal_dive_number"])
+                    dive_number = str(record["goal_dive_number"])
+
+                    if dive_number in completed_dives:
+                        row["Goal"] = f"{dive_number} ✅"
+                    else:
+                        row["Goal"] = dive_number
 
                 if pd.notna(record.get("date_added")):
                     row["Date Added"] = (

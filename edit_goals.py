@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import date
 
 GOAL_TYPES = [
     "Forward",
@@ -47,6 +48,29 @@ def render_edit_goals_page(supabase):
         .data
     )
 
+    # -------------------------
+    # Current Diving Year
+    # -------------------------
+    today = date.today()
+
+    diver_season = next(
+        (
+            d["season"]
+            for d in divers_rows
+            if d["diver"] == selected_diver
+        ),
+        None,
+    )
+
+    if (
+        diver_season == "Boys"
+        and today.month > 8
+    ):
+        current_diving_year = str(today.year + 1)
+    else:
+        current_diving_year = str(today.year)
+
+
     goals_rows = (
         supabase.table("goals")
         .select("*")
@@ -93,6 +117,48 @@ def render_edit_goals_page(supabase):
         return
 
     # -------------------------
+    # Current Diving Year
+    # -------------------------
+    today = date.today()
+
+    if today.month > 8:
+        current_diving_year = str(today.year + 1)
+    else:
+        current_diving_year = str(today.year)
+
+    # -------------------------
+    # Completed Dives
+    # -------------------------
+    results_rows = (
+        supabase.table("results")
+        .select("dive_number,score,meet")
+        .eq("diver", selected_diver)
+        .execute()
+        .data
+    )
+
+    completed_dives = set()
+
+    results_df = pd.DataFrame(results_rows)
+
+    if not results_df.empty:
+        results_df["meet"] = results_df["meet"].astype(str)
+
+        completed_dives = set(
+            results_df[
+                (results_df["score"] > 0)
+                & (
+                    results_df["meet"].str[:4]
+                    == current_diving_year
+                )
+            ]["dive_number"]
+        )
+
+    # -------------------------
+    # Build Fixed 7 Goal Rows
+    # -------------------------
+
+    # -------------------------
     # Build Fixed 7 Goal Rows
     # -------------------------
     diver_goals = [
@@ -117,16 +183,28 @@ def render_edit_goals_page(supabase):
                 reverse=True,
             )[0]
 
+            goal_dive_number = newest.get("goal_dive_number")
+
+            status = ""
+
+            if (
+                goal_dive_number
+                and str(goal_dive_number) in completed_dives
+            ):
+                status = "✅ Completed"
+
             rows.append(
                 {
                     "goal_id": newest.get("goal_id"),
                     "diver": selected_diver,
                     "goal_type": goal_type,
-                    "goal_dive_number": newest.get("goal_dive_number"),
+                    "goal_dive_number": goal_dive_number,
                     "goal_score": newest.get("goal_score"),
+                    "status": status,
                     "date_added": newest.get("date_added"),
                 }
             )
+            
         else:
             rows.append(
                 {
@@ -135,6 +213,7 @@ def render_edit_goals_page(supabase):
                     "goal_type": goal_type,
                     "goal_dive_number": None,
                     "goal_score": None,
+                    "status": "",
                     "date_added": None,
                 }
             )
@@ -153,6 +232,7 @@ def render_edit_goals_page(supabase):
             "goal_id",
             "date_added",
             "goal_type",
+            "status",
         ],
         column_config={
             "diver": st.column_config.TextColumn(
@@ -169,6 +249,10 @@ def render_edit_goals_page(supabase):
             "goal_score": st.column_config.NumberColumn(
                 "Goal Score",
                 format="%.2f",
+            ),
+            "status": st.column_config.TextColumn(
+                "Status",
+                help="Completed in current diving year",
             ),
         },
     )
