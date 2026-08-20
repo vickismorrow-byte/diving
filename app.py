@@ -319,48 +319,102 @@ with st.sidebar:
 if "page" not in st.session_state:
     st.session_state.page = "Power Rankings"
 
+# =====================================================
+# SIDEBAR NAVIGATION
+# =====================================================
+
 with st.sidebar:
 
-    with st.expander("📊 Analytics", expanded=True):
-        if st.button("Top Scores"):
-            st.session_state.page = "Top Scores"
+    # Admin Navigation
+    if st.session_state.is_admin:
 
-        if st.button("Score Progression"):
-            st.session_state.page = "Score Progression"
+        if "page" not in st.session_state:
+            st.session_state.page = "Approve Users"
 
-        if st.button("Power Rankings"):
+        st.subheader("Administration")
+
+        if st.button("Approve Users", use_container_width=True):
+            st.session_state.page = "Approve Users"
+
+        if st.button("Add Diver", use_container_width=True):
+            st.session_state.page = "Add Diver"
+
+        if st.button("Add Meet", use_container_width=True):
+            st.session_state.page = "Add Meet"
+
+        st.divider()
+
+        st.subheader("Results")
+
+        if st.button("Enter Results", use_container_width=True):
+            st.session_state.page = "Add Results"
+
+        if st.button("Manage Results", use_container_width=True):
+            st.session_state.page = "View/Edit Results"
+
+        st.divider()
+
+        st.subheader("Analytics")
+
+        if st.button("Power Rankings", use_container_width=True):
             st.session_state.page = "Power Rankings"
 
-        if st.button("Dive Analysis"):
+        if st.button("Top Scores", use_container_width=True):
+            st.session_state.page = "Top Scores"
+
+        if st.button("Score Trends", use_container_width=True):
+            st.session_state.page = "Score Progression"
+
+        if st.button("Dive Analytics", use_container_width=True):
             st.session_state.page = "Dive Analysis"
 
-        if st.button("View Current Lists"):
+        st.divider()
+
+        st.subheader("Goals & Lists")
+
+        if st.button("Goals", use_container_width=True):
+            st.session_state.page = "View Goals"
+
+        if st.button("Manage Goals", use_container_width=True):
+            st.session_state.page = "View/Edit Goals"
+
+        if st.button("Current Lists", use_container_width=True):
             st.session_state.page = "View Current Lists"
 
-        if st.button("View Goals"):
+        if st.button("Manage Lists", use_container_width=True):
+            st.session_state.page = "View/Edit Current Lists"
+
+    # Regular User Navigation
+    else:
+
+        if "page" not in st.session_state:
+            st.session_state.page = "Power Rankings"
+
+        st.subheader("Analytics")
+
+        if st.button("Power Rankings", use_container_width=True):
+            st.session_state.page = "Power Rankings"
+
+        if st.button("Top Scores", use_container_width=True):
+            st.session_state.page = "Top Scores"
+
+        if st.button("Score Trends", use_container_width=True):
+            st.session_state.page = "Score Progression"
+
+        if st.button("Dive Analytics", use_container_width=True):
+            st.session_state.page = "Dive Analysis"
+
+        st.divider()
+
+        st.subheader("Goals & Lists")
+
+        if st.button("Goals", use_container_width=True):
             st.session_state.page = "View Goals"
-        
 
-    if st.session_state.is_admin:
-        with st.expander("⚙️ Administration"):
-            if st.button("Approve Users"):
-                st.session_state.page = "Approve Users"
-
-            if st.button("Add Meet"):
-                st.session_state.page = "Add Meet"
-            if st.button("Add Diver"):
-                st.session_state.page = "Add Diver"
-            if st.button("Add Results"):
-                st.session_state.page = "Add Results"
-            if st.button("View/Edit Results"):
-                st.session_state.page = "View/Edit Results"
-            if st.button("View/Edit Current Lists"):
-                st.session_state.page = "View/Edit Current Lists"
-            if st.button("View/Edit Goals"):
-                st.session_state.page = "View/Edit Goals"
+        if st.button("Current Lists", use_container_width=True):
+            st.session_state.page = "View Current Lists"
 
 page = st.session_state.page
-
 
 # =====================================================
 # ADD DIVER
