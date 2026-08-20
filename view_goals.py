@@ -170,9 +170,16 @@ def render_view_goals_page(supabase):
 
     goals_df = pd.DataFrame(goals)
 
+    # Keep a copy of ALL goals for history
+    all_goals_df = goals_df.copy()
+
     if not goals_df.empty:
         goals_df["date_added"] = pd.to_datetime(
             goals_df["date_added"]
+        )
+
+        all_goals_df["date_added"] = pd.to_datetime(
+            all_goals_df["date_added"]
         )
 
         goals_df = (
@@ -265,7 +272,8 @@ def render_view_goals_page(supabase):
     completed_goal_rows = []
 
     # results_df already loaded earlier
-    results_df["meet"] = results_df["meet"].astype(str)
+    if not results_df.empty:
+        results_df["meet"] = results_df["meet"].astype(str)
 
     for _, record in all_goals_df.iterrows():
         completed_date = None
