@@ -326,7 +326,7 @@ def render_view_goals_page(supabase):
                 }
             )
 
-    with st.expander("Completed Goals This Diving Year"):
+    with st.expander("All Completed Goals This Season"):
         if completed_goal_rows:
             completed_df = pd.DataFrame(completed_goal_rows)
 
