@@ -325,94 +325,76 @@ if "page" not in st.session_state:
 
 with st.sidebar:
 
-    # Admin Navigation
+    # Default landing pages
+    if "page" not in st.session_state:
+        st.session_state.page = (
+            "Approve Users"
+            if st.session_state.is_admin
+            else "Power Rankings"
+        )
+
+    # =========================
+    # ANALYTICS
+    # =========================
+    with st.expander("Analytics", expanded=True):
+
+        if st.button("Power Rankings", use_container_width=True):
+            st.session_state.page = "Power Rankings"
+
+        if st.button("Top Scores", use_container_width=True):
+            st.session_state.page = "Top Scores"
+
+        if st.button("Score Trends", use_container_width=True):
+            st.session_state.page = "Score Progression"
+
+        if st.button("Dive Analytics", use_container_width=True):
+            st.session_state.page = "Dive Analysis"
+
+    # =========================
+    # GOALS & LISTS
+    # =========================
+    with st.expander("Goals & Lists"):
+
+        if st.button("Goals", use_container_width=True):
+            st.session_state.page = "View Goals"
+
+        if st.session_state.is_admin:
+            if st.button("Manage Goals", use_container_width=True):
+                st.session_state.page = "View/Edit Goals"
+
+        if st.button("Current Lists", use_container_width=True):
+            st.session_state.page = "View Current Lists"
+
+        if st.session_state.is_admin:
+            if st.button("Manage Lists", use_container_width=True):
+                st.session_state.page = "View/Edit Current Lists"
+
+    # =========================
+    # RESULTS (ADMIN ONLY)
+    # =========================
     if st.session_state.is_admin:
+        with st.expander("Results"):
 
-        if "page" not in st.session_state:
-            st.session_state.page = "Approve Users"
+            if st.button("Enter Results", use_container_width=True):
+                st.session_state.page = "Add Results"
 
-        st.subheader("Administration")
+            if st.button("Manage Results", use_container_width=True):
+                st.session_state.page = "View/Edit Results"
 
-        if st.button("Approve Users", use_container_width=True):
-            st.session_state.page = "Approve Users"
+    # =========================
+    # ADMINISTRATION
+    # =========================
+    if st.session_state.is_admin:
+        with st.expander("Administration", expanded=True):
 
-        if st.button("Add Diver", use_container_width=True):
-            st.session_state.page = "Add Diver"
+            if st.button("Approve Users", use_container_width=True):
+                st.session_state.page = "Approve Users"
 
-        if st.button("Add Meet", use_container_width=True):
-            st.session_state.page = "Add Meet"
+            if st.button("Add Diver", use_container_width=True):
+                st.session_state.page = "Add Diver"
 
-        st.divider()
-
-        st.subheader("Results")
-
-        if st.button("Enter Results", use_container_width=True):
-            st.session_state.page = "Add Results"
-
-        if st.button("Manage Results", use_container_width=True):
-            st.session_state.page = "View/Edit Results"
-
-        st.divider()
-
-        st.subheader("Analytics")
-
-        if st.button("Power Rankings", use_container_width=True):
-            st.session_state.page = "Power Rankings"
-
-        if st.button("Top Scores", use_container_width=True):
-            st.session_state.page = "Top Scores"
-
-        if st.button("Score Trends", use_container_width=True):
-            st.session_state.page = "Score Progression"
-
-        if st.button("Dive Analytics", use_container_width=True):
-            st.session_state.page = "Dive Analysis"
-
-        st.divider()
-
-        st.subheader("Goals & Lists")
-
-        if st.button("Goals", use_container_width=True):
-            st.session_state.page = "View Goals"
-
-        if st.button("Manage Goals", use_container_width=True):
-            st.session_state.page = "View/Edit Goals"
-
-        if st.button("Current Lists", use_container_width=True):
-            st.session_state.page = "View Current Lists"
-
-        if st.button("Manage Lists", use_container_width=True):
-            st.session_state.page = "View/Edit Current Lists"
-
-    # Regular User Navigation
-    else:
-
-        if "page" not in st.session_state:
-            st.session_state.page = "Power Rankings"
-
-        st.subheader("Analytics")
-
-        if st.button("Power Rankings", use_container_width=True):
-            st.session_state.page = "Power Rankings"
-
-        if st.button("Top Scores", use_container_width=True):
-            st.session_state.page = "Top Scores"
-
-        if st.button("Score Trends", use_container_width=True):
-            st.session_state.page = "Score Progression"
-
-        if st.button("Dive Analytics", use_container_width=True):
-            st.session_state.page = "Dive Analysis"
-
-        st.divider()
-
-        st.subheader("Goals & Lists")
-
-        if st.button("Goals", use_container_width=True):
-            st.session_state.page = "View Goals"
-
-        if st.button("Current Lists", use_container_width=True):
-            st.session_state.page = "View Current Lists"
+            if st.button("Add Meet", use_container_width=True):
+                st.session_state.page = "Add Meet"
 
 page = st.session_state.page
 
