@@ -237,7 +237,7 @@ def render_edit_lists_page(supabase):
                 original_row = df.iloc[row_index]
                 edited_row = edited_df.iloc[row_index]
 
-                category = edited_row["Category"]
+                category = edited_df.index[row_index]
 
                 # -------------------------
                 # Voluntary
