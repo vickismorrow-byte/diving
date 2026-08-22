@@ -147,6 +147,9 @@ def render_edit_goals_page(supabase):
 
     completed_score_goals = {}
 
+    six_dive_best = 0.0
+    eleven_dive_best = 0.0
+
     if not results_df.empty:
 
         meet_scores = (
