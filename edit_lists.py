@@ -194,7 +194,6 @@ def render_edit_lists_page(supabase):
         use_container_width=True,
         num_rows="fixed",
         disabled=[
-            "Category",
             "Voluntary DD",
             "",
             "Optional DD",
