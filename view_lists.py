@@ -113,10 +113,12 @@ def render_view_lists_page(supabase):
 
             if voluntary_record:
                 voluntary_dive = voluntary_record["dive_number"]
-                voluntary_dd = dd_lookup.get(
-                    voluntary_dive,
-                    ""
-                )
+
+                if voluntary_dive == "999D":
+                    voluntary_dive = None
+                    voluntary_dd = None
+                else:
+                    voluntary_dd = dd_lookup.get(voluntary_dive, "")
 
         optional_record = next(
             (
@@ -130,10 +132,12 @@ def render_view_lists_page(supabase):
 
         if optional_record:
             optional_dive = optional_record["dive_number"]
-            optional_dd = dd_lookup.get(
-                optional_dive,
-                ""
-            )
+
+            if optional_dive == "999D":
+                optional_dive = ""
+                optional_dd = None
+            else:
+                optional_dd = dd_lookup.get(optional_dive, "")
 
         if category == "11th Dive":
             voluntary_dive = "XXXX"
