@@ -124,7 +124,12 @@ def render_edit_lists_page(supabase):
                 )[0]
 
                 voluntary_dive = newest["dive_number"]
-                voluntary_dd = dd_lookup.get(voluntary_dive)
+
+                if voluntary_dive == "999D":
+                    voluntary_dive = ""
+                    voluntary_dd = None
+                else:
+                    voluntary_dd = dd_lookup.get(voluntary_dive)
 
         optional_matches = [
             row
@@ -141,7 +146,12 @@ def render_edit_lists_page(supabase):
             )[0]
 
             optional_dive = newest["dive_number"]
-            optional_dd = dd_lookup.get(optional_dive)
+            
+            if optional_dive == "999D":
+                optional_dive = ""
+                optional_dd = None
+            else:
+                optional_dd = dd_lookup.get(optional_dive)
 
         if category == "11th Dive":
             voluntary_dive = "XXXX"
@@ -249,9 +259,12 @@ def render_edit_lists_page(supabase):
                         != edited_row["Voluntary"]
                     ):
 
-                        if pd.notna(
-                            edited_row["Voluntary"]
-                        ):
+                        if pd.notna(edited_row["Voluntary"]):
+
+                            dive_number = edited_row["Voluntary"]
+
+                            if dive_number == "XXXX":
+                                dive_number = "999D"
 
                             (
                                 supabase.table("lists")
@@ -260,7 +273,7 @@ def render_edit_lists_page(supabase):
                                         "diver": selected_diver,
                                         "category": category,
                                         "type": "V",
-                                        "dive_number": edited_row["Voluntary"],
+                                        "dive_number": dive_number,
                                     }
                                 )
                                 .execute()
@@ -277,9 +290,12 @@ def render_edit_lists_page(supabase):
                     != edited_row["Optional"]
                 ):
 
-                    if pd.notna(
-                        edited_row["Optional"]
-                    ):
+                    if pd.notna(edited_row["Optional"]):
+
+                        dive_number = edited_row["Optional"]
+
+                        if dive_number == "XXXX":
+                            dive_number = "999D"
 
                         (
                             supabase.table("lists")
@@ -288,7 +304,7 @@ def render_edit_lists_page(supabase):
                                     "diver": selected_diver,
                                     "category": category,
                                     "type": "O",
-                                    "dive_number": edited_row["Optional"],
+                                    "dive_number": dive_number,
                                 }
                             )
                             .execute()
