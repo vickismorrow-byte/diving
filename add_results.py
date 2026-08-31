@@ -352,7 +352,6 @@ def render_add_results_page(supabase):
 
             time.sleep(1)
 
-            st.session_state["selected_diver"] = None
             st.session_state["results_editor_counter"] = (
                 st.session_state.get("results_editor_counter", 0) + 1
             )
