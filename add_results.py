@@ -97,12 +97,14 @@ def render_add_results_page(supabase):
 
         selected_meet = st.selectbox(
             "Meet",
-            meets
+            meets,
+            key="selected_meet"
         )
 
         selected_diver = st.selectbox(
             "Diver",
-            divers
+            divers,
+            key="selected_diver"
         )
 
         dive_count = st.radio(
@@ -150,7 +152,8 @@ def render_add_results_page(supabase):
                     step=0.01,
                     format="%.2f"
                 )
-            }
+            },
+            key=f"results_editor_{st.session_state.get('results_editor_counter', 0)}"
         )
 
         if st.button(
@@ -341,8 +344,23 @@ def render_add_results_page(supabase):
             ).execute()
 
             st.success(
-                f"Successfully inserted {len(rows_to_insert)} result records."
+              f"Successfully inserted {len(rows_to_insert)} result records."
             )
+
+            # Keep meet selected
+            current_meet = st.session_state.get("selected_meet")
+
+            # Clear diver and reset editor
+            st.session_state["selected_diver"] = None
+            st.session_state["results_editor_counter"] = (
+                st.session_state.get("results_editor_counter", 0) + 1
+            )
+
+            # Restore meet
+            if current_meet:
+                st.session_state["selected_meet"] = current_meet
+
+            st.rerun()
 
     except Exception as e:
         st.error(f"Unable to load results page: {e}")

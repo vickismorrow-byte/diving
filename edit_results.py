@@ -48,6 +48,7 @@ def render_edit_results_page(supabase):
         season_filter = st.selectbox(
             "Season",
             ["All", "Boys", "Girls"],
+            key="edit_season"
         )
 
     filtered_rows = results_rows.copy()
@@ -74,6 +75,7 @@ def render_edit_results_page(supabase):
         year_filter = st.selectbox(
             "Year",
             ["All"] + years,
+            key="edit_year"
         )
 
     # Filter by year
@@ -98,6 +100,7 @@ def render_edit_results_page(supabase):
     selected_diver = st.selectbox(
         "Diver *",
         ["Select Diver"] + available_divers,
+        key="edit_diver"
     )
 
     if selected_diver == "Select Diver":
@@ -117,6 +120,7 @@ def render_edit_results_page(supabase):
     selected_meet = st.selectbox(
         "Meet *",
         ["Select Meet"] + available_meets,
+        key="edit_meet"
     )
 
     if selected_meet == "Select Meet":
@@ -147,7 +151,7 @@ def render_edit_results_page(supabase):
         use_container_width=True,
         num_rows="fixed",
         disabled=["entryid", "meet", "diver", "score"],
-        key="edit_results_table",
+        key=f"edit_results_table_{st.session_state.get('edit_results_counter', 0)}",
     )
 
 
@@ -169,6 +173,17 @@ def render_edit_results_page(supabase):
                 )
 
             st.success("Results updated successfully.")
+
+            # Clear diver and meet
+            st.session_state["edit_diver"] = "Select Diver"
+            st.session_state["edit_meet"] = "Select Meet"
+
+            # Reset editor
+            st.session_state["edit_results_counter"] = (
+                st.session_state.get("edit_results_counter", 0) + 1
+            )
+
+            st.rerun()
 
         except Exception as ex:
             st.error(f"Update failed: {ex}")
