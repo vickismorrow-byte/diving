@@ -183,11 +183,11 @@ def render_edit_results_page(supabase):
                 )
 
             st.success("Results updated successfully.")
-
             time.sleep(1)
 
-            st.session_state.pop("edit_diver", None)
-            st.session_state.pop("edit_meet", None)
+            st.session_state["edit_reset_counter"] = (
+                st.session_state.get("edit_reset_counter", 0) + 1
+            )
 
             st.session_state["edit_results_counter"] = (
                 st.session_state.get("edit_results_counter", 0) + 1
