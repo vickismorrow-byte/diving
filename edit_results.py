@@ -124,6 +124,11 @@ def render_edit_results_page(supabase):
         key="edit_meet"
     )
 
+
+    if st.session_state.get("_last_edit_diver", "") != selected_diver:
+        st.session_state["edit_meet"] = "Select Meet"
+        st.session_state["_last_edit_diver"] = selected_diver
+
     if selected_meet == "Select Meet":
         return
 
@@ -219,6 +224,14 @@ def render_edit_results_page(supabase):
 
                 st.success("Results sheet deleted successfully.")
                 time.sleep(1)
+
+                st.session_state.pop("edit_diver", None)
+                st.session_state.pop("edit_meet", None)
+
+                st.session_state["edit_results_counter"] = (
+                    st.session_state.get("edit_results_counter", 0) + 1
+                )
+
                 st.rerun()
 
             except Exception as ex:
