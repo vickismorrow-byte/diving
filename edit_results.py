@@ -45,6 +45,9 @@ def render_edit_results_page(supabase):
     # ---------------------------------
     col1, col2 = st.columns(2)
 
+    diver_key = f"edit_diver_{st.session_state.get('edit_reset_counter', 0)}"
+    meet_key = f"edit_meet_{st.session_state.get('edit_reset_counter', 0)}"
+
     with col1:
         season_filter = st.selectbox(
             "Season",
@@ -101,7 +104,7 @@ def render_edit_results_page(supabase):
     selected_diver = st.selectbox(
         "Diver *",
         ["Select Diver"] + available_divers,
-        key="edit_diver"
+        key=diver_key
     )
 
     if selected_diver == "Select Diver":
@@ -126,7 +129,7 @@ def render_edit_results_page(supabase):
     selected_meet = st.selectbox(
         "Meet *",
         ["Select Meet"] + available_meets,
-        key="edit_meet"
+        key=meet_key
     )
 
 
@@ -226,11 +229,8 @@ def render_edit_results_page(supabase):
                 st.success("Results sheet deleted successfully.")
                 time.sleep(1)
 
-                st.session_state.pop("edit_diver", None)
-                st.session_state.pop("edit_meet", None)
-
-                st.session_state["edit_results_counter"] = (
-                    st.session_state.get("edit_results_counter", 0) + 1
+                st.session_state["edit_reset_counter"] = (
+                    st.session_state.get("edit_reset_counter", 0) + 1
                 )
 
                 st.rerun()
