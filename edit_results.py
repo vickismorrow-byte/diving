@@ -118,16 +118,17 @@ def render_edit_results_page(supabase):
         }
     )
 
+    current_meet = st.session_state.get("edit_meet")
+
+    if current_meet not in available_meets:
+        st.session_state.pop("edit_meet", None)
+
     selected_meet = st.selectbox(
         "Meet *",
         ["Select Meet"] + available_meets,
         key="edit_meet"
     )
 
-
-    if st.session_state.get("_last_edit_diver", "") != selected_diver:
-        st.session_state["edit_meet"] = "Select Meet"
-        st.session_state["_last_edit_diver"] = selected_diver
 
     if selected_meet == "Select Meet":
         return
