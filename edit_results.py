@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time
 
 
 def render_edit_results_page(supabase):
@@ -174,6 +175,8 @@ def render_edit_results_page(supabase):
 
             st.success("Results updated successfully.")
 
+            time.sleep(1)
+
             st.session_state.pop("edit_diver", None)
             st.session_state.pop("edit_meet", None)
 
@@ -215,6 +218,7 @@ def render_edit_results_page(supabase):
                 )
 
                 st.success("Results sheet deleted successfully.")
+                time.sleep(1)
                 st.rerun()
 
             except Exception as ex:

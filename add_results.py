@@ -3,6 +3,7 @@ import re
 import pandas as pd
 import streamlit as st
 from datetime import date
+import time
 
 @st.cache_data(ttl=60)
 def get_divers(_supabase):
@@ -348,6 +349,8 @@ def render_add_results_page(supabase):
             st.success(
               f"Successfully inserted {len(rows_to_insert)} result records."
             )
+
+            time.sleep(1)
 
             st.session_state.pop("selected_diver", None)
             st.session_state["results_editor_counter"] = (st.session_state.get("results_editor_counter", 0) + 1)
