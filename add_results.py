@@ -104,6 +104,8 @@ def render_add_results_page(supabase):
         selected_diver = st.selectbox(
             "Diver",
             divers,
+            index=None,
+            placeholder="Select Diver",
             key="selected_diver"
         )
 
@@ -347,18 +349,8 @@ def render_add_results_page(supabase):
               f"Successfully inserted {len(rows_to_insert)} result records."
             )
 
-            # Keep meet selected
-            current_meet = st.session_state.get("selected_meet")
-
-            # Clear diver and reset editor
-            st.session_state["selected_diver"] = None
-            st.session_state["results_editor_counter"] = (
-                st.session_state.get("results_editor_counter", 0) + 1
-            )
-
-            # Restore meet
-            if current_meet:
-                st.session_state["selected_meet"] = current_meet
+            st.session_state.pop("selected_diver", None)
+            st.session_state["results_editor_counter"] = (st.session_state.get("results_editor_counter", 0) + 1)
 
             st.rerun()
 

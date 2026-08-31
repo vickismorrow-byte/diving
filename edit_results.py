@@ -174,11 +174,9 @@ def render_edit_results_page(supabase):
 
             st.success("Results updated successfully.")
 
-            # Clear diver and meet
-            st.session_state["edit_diver"] = "Select Diver"
-            st.session_state["edit_meet"] = "Select Meet"
+            st.session_state.pop("edit_diver", None)
+            st.session_state.pop("edit_meet", None)
 
-            # Reset editor
             st.session_state["edit_results_counter"] = (
                 st.session_state.get("edit_results_counter", 0) + 1
             )
