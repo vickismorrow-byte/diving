@@ -3,6 +3,7 @@ import re
 import pandas as pd
 import streamlit as st
 from datetime import date
+import time
 
 @st.cache_data(ttl=60)
 def get_divers(_supabase):
@@ -97,12 +98,16 @@ def render_add_results_page(supabase):
 
         selected_meet = st.selectbox(
             "Meet",
-            meets
+            meets,
+            key="selected_meet"
         )
 
         selected_diver = st.selectbox(
             "Diver",
-            divers
+            divers,
+            index=None,
+            placeholder="Select Diver",
+            key=f"selected_diver_{st.session_state.get('results_editor_counter', 0)}"
         )
 
         dive_count = st.radio(
@@ -119,6 +124,11 @@ def render_add_results_page(supabase):
                 "Score": [None] * dive_count
             }
         )
+
+        st.caption("Award = the sum of the 3 judge's awards, so [5, 5, 5] would mean Award is 15")
+        st.caption("Score = Award * DD")
+        st.caption("Enter ONE of these and the system will calculate the other")
+
 
         edited_df = st.data_editor(
             default_df,
@@ -150,7 +160,8 @@ def render_add_results_page(supabase):
                     step=0.01,
                     format="%.2f"
                 )
-            }
+            },
+            key=f"results_editor_{st.session_state.get('results_editor_counter', 0)}"
         )
 
         if st.button(
@@ -341,8 +352,16 @@ def render_add_results_page(supabase):
             ).execute()
 
             st.success(
-                f"Successfully inserted {len(rows_to_insert)} result records."
+              f"Successfully inserted {len(rows_to_insert)} result records."
             )
+
+            time.sleep(1)
+
+            st.session_state["results_editor_counter"] = (
+                st.session_state.get("results_editor_counter", 0) + 1
+            )
+
+            st.rerun()
 
     except Exception as e:
         st.error(f"Unable to load results page: {e}")

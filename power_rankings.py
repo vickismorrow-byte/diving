@@ -206,8 +206,20 @@ def build_diver_projection(df_diver):
 
         if pair is None:
 
-            result[f"{cat} Vol"] = 0
-            result[f"{cat} Opt"] = 0
+            cat_df = df_diver[df_diver["Category"] == cat]
+
+            vols = cat_df[cat_df["type"] == "V"]
+            opts = cat_df[cat_df["type"] == "O"]
+
+            if not vols.empty:
+                result[f"{cat} Vol"] = float(vols["score"].max())
+            else:
+                result[f"{cat} Vol"] = 0
+
+            if not opts.empty:
+                result[f"{cat} Opt"] = float(opts["score"].max())
+            else:
+                result[f"{cat} Opt"] = 0
 
             continue
 

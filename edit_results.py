@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time
 
 
 def render_edit_results_page(supabase):
@@ -44,10 +45,14 @@ def render_edit_results_page(supabase):
     # ---------------------------------
     col1, col2 = st.columns(2)
 
+    diver_key = f"edit_diver_{st.session_state.get('edit_reset_counter', 0)}"
+    meet_key = f"edit_meet_{st.session_state.get('edit_reset_counter', 0)}"
+
     with col1:
         season_filter = st.selectbox(
             "Season",
             ["All", "Boys", "Girls"],
+            key="edit_season"
         )
 
     filtered_rows = results_rows.copy()
@@ -74,6 +79,7 @@ def render_edit_results_page(supabase):
         year_filter = st.selectbox(
             "Year",
             ["All"] + years,
+            key="edit_year"
         )
 
     # Filter by year
@@ -98,6 +104,7 @@ def render_edit_results_page(supabase):
     selected_diver = st.selectbox(
         "Diver *",
         ["Select Diver"] + available_divers,
+        key=diver_key
     )
 
     if selected_diver == "Select Diver":
@@ -114,10 +121,17 @@ def render_edit_results_page(supabase):
         }
     )
 
+    current_meet = st.session_state.get("edit_meet")
+
+    if current_meet not in available_meets:
+        st.session_state.pop("edit_meet", None)
+
     selected_meet = st.selectbox(
         "Meet *",
         ["Select Meet"] + available_meets,
+        key=meet_key
     )
+
 
     if selected_meet == "Select Meet":
         return
@@ -142,12 +156,16 @@ def render_edit_results_page(supabase):
 
     st.subheader("Current Results")
 
+    st.caption("Award = the sum of the 3 judge's awards, so [5, 5, 5] would mean Award is 15")
+    st.caption("Score = Award * DD")
+    st.caption("You may only change the AWARD on this page")
+
     edited_df = st.data_editor(
         df,
         use_container_width=True,
         num_rows="fixed",
         disabled=["entryid", "meet", "diver", "score"],
-        key="edit_results_table",
+        key=f"edit_results_table_{st.session_state.get('edit_results_counter', 0)}",
     )
 
 
@@ -169,6 +187,17 @@ def render_edit_results_page(supabase):
                 )
 
             st.success("Results updated successfully.")
+            time.sleep(1)
+
+            st.session_state["edit_reset_counter"] = (
+                st.session_state.get("edit_reset_counter", 0) + 1
+            )
+
+            st.session_state["edit_results_counter"] = (
+                st.session_state.get("edit_results_counter", 0) + 1
+            )
+
+            st.rerun()
 
         except Exception as ex:
             st.error(f"Update failed: {ex}")
@@ -202,6 +231,12 @@ def render_edit_results_page(supabase):
                 )
 
                 st.success("Results sheet deleted successfully.")
+                time.sleep(1)
+
+                st.session_state["edit_reset_counter"] = (
+                    st.session_state.get("edit_reset_counter", 0) + 1
+                )
+
                 st.rerun()
 
             except Exception as ex:
