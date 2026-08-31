@@ -127,9 +127,9 @@ def render_add_results_page(supabase):
 
         st.caption("Award = the sum of the 3 judge's awards, so [5, 5, 5] would mean Award is 15")
         st.caption("Score = Award * DD")
-        st.caption("Enter or Change ONE of these and the system will calculate the other")
+        st.caption("Enter ONE of these and the system will calculate the other")
 
-        
+
         edited_df = st.data_editor(
             default_df,
             hide_index=True,
