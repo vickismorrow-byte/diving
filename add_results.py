@@ -107,7 +107,7 @@ def render_add_results_page(supabase):
             divers,
             index=None,
             placeholder="Select Diver",
-            key="selected_diver"
+            key=f"selected_diver_{st.session_state.get('results_editor_counter', 0)}"
         )
 
         dive_count = st.radio(
