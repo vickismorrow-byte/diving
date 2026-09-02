@@ -469,6 +469,20 @@ if page == "Add Diver":
 
 elif page == "Add Meet":
 
+    from datetime import date
+
+    today = date.today()
+
+    # July 1 through November 15 inclusive
+    if (
+        (today.month > 7 or (today.month == 7 and today.day >= 1))
+        and
+        (today.month < 11 or (today.month == 11 and today.day <= 15))
+    ):
+        default_gender = "Girls"
+    else:
+        default_gender = "Boys"
+
     if not st.session_state.is_admin:
         st.error("Admin access required")
         st.stop()
@@ -485,10 +499,8 @@ elif page == "Add Meet":
 
         season = st.selectbox(
             "Season",
-            [
-                "Boys",
-                "Girls"
-            ]
+            ["Boys", "Girls"],
+            index=["Boys", "Girls"].index(default_gender)
         )
 
         opponent = st.text_input(
